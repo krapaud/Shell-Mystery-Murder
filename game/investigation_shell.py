@@ -85,6 +85,27 @@ INTERLUDE_DIALOGUES = {
     (10, "evidence/git/branch-log"): "La piste Git arrive en dernier. Elle peut confirmer l'ordre des opérations, mais elle ne remplacera pas les autres preuves.",
 }
 
+FILE_DIALOGUES = {
+    "dossier-01": "Le briefing sépare déjà le dépôt, l'archive et les accès. Notez ces rôles : ils serviront à lire les preuves sans les confondre.",
+    "dossier-02": "Ici, les droits sont associés à des identifiants précis. La prochaine question est de savoir quelle session les a réellement utilisés.",
+    "dossier-03": "Le contrôle d'intégrité fournit une heure de référence. Toute action liée à la disparition devra être comparée à ce repère.",
+    "dossier-04": "Les déclarations décrivent des observations différentes. Gardez leurs horaires et leurs formulations pour les confronter aux traces techniques.",
+    "dossier-05": "Ce dossier place le renommage, la branche et la disparition dans la même fenêtre. Il faudra vérifier l'ordre exact dans les logs.",
+    "dossier-06": "Les questions finales distinguent propriétaire de l'accès, utilisateur de la session et acteur de l'action. Une seule preuve ne suffira pas.",
+    "identity/members": "La liste relie les noms aux member_id. Ces identifiants permettent maintenant de lire les journaux sans deviner les personnes.",
+    "identity/credentials": "Chaque credential a un propriétaire et un périmètre. Un propriétaire d'accès n'est pas automatiquement l'acteur devant le terminal.",
+    "identity/sessions": "Les sessions ajoutent un terminal et une période à chaque utilisateur. Comparez ces horaires avec ceux des commandes et des accès.",
+    "incident/incident-note": "Le constat indique quel fichier ou chemin a disparu et quand cela a été remarqué. Il décrit l'effet, pas encore son auteur.",
+    "logs/access": "Ces lignes combinent action, credential, session et cible. Relevez ces quatre champs : c'est leur correspondance qui donnera du poids à la piste.",
+    "logs/terminal-history": "L'historique montre les commandes réellement saisies, notamment la variable de chemin et les opérations Git. Il faudra les rattacher à une session.",
+    "logs/command-audit": "L'audit précise le terminal, l'action et son statut. Une opération réussie ne doit pas être confondue avec une simple tentative.",
+    "logs/failed-commands": "Les échecs indiquent ce qui a été tenté sans modifier l'état attendu. Ils peuvent préciser l'intention et la chronologie, mais pas prouver seuls le vol.",
+    "team/notes": "Ces notes donnent le contexte humain autour des horaires et des accès. Utilisez-les comme pistes à vérifier, pas comme preuves isolées.",
+    "team/interviews": "Les témoignages apportent des déclarations et des horaires. La piste devient solide seulement si les logs confirment ce qui a été observé.",
+    "git/branch-log": "Le journal Git montre les mouvements de la branche et les changements publiés. Comparez chaque horodatage avec la fenêtre de disparition.",
+    "git/reflog": "Le reflog complète le journal de branche en conservant l'ordre local des opérations. Il peut confirmer une séquence, pas l'identité à lui seul.",
+}
+
 REPORT_STAGES = (
     "Quels sont le projet, le fichier recherché, les rôles et les questions de l'enquête ?",
     "Quelles correspondances avez-vous trouvées entre membres, sessions, credentials et terminaux ?",
@@ -110,6 +131,15 @@ def _interlude_reaction(command: str, step: int, consulted: set[str]) -> Optiona
     lowered = command.lower()
     for (expected_step, marker), dialogue in INTERLUDE_DIALOGUES.items():
         if expected_step == step and marker in lowered and marker not in consulted:
+            return dialogue
+    return None
+
+
+def _file_dialogue(command: str, reacted_files: set[str]) -> Optional[str]:
+    lowered = command.lower()
+    for marker, dialogue in FILE_DIALOGUES.items():
+        if marker in lowered and marker not in reacted_files:
+            reacted_files.add(marker)
             return dialogue
     return None
 
@@ -321,6 +351,7 @@ def _custom(root: Path, line: str) -> bool:
 def run_shell_console(root: Path) -> int:
     progress_step = 0
     consulted = set()
+    reacted_files = set()
     if readline is not None:
         readline.parse_and_bind("set editing-mode emacs")
     log_dir = root / ".student-data"
@@ -370,6 +401,11 @@ def run_shell_console(root: Path) -> int:
                 _write_session_block(log_path, "OUTPUT_ERROR", error)
                 if "No such file or directory" in error:
                     print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
+            file_dialogue = None if error else _file_dialogue(line, reacted_files)
+            if file_dialogue:
+                dialogue = f"[Mickael] {file_dialogue}"
+                print(_paint(YELLOW, dialogue))
+                _write_session_log(log_path, f"DIALOGUE {dialogue}")
             interlude = _interlude_reaction(line, progress_step, consulted)
             if interlude:
                 dialogue = f"[Mickael] {interlude}"
