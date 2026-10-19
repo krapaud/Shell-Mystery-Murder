@@ -4,17 +4,27 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
 
 HELP = """Commandes : .files, .cat <fichier>, .find <motif>, .grep <motif> <fichier>, .help (ou help), .exit.
 Les commandes Shell de lecture (find, cat, grep, cut, sort, awk, head, tail)
 peuvent aussi être utilisées. Les écritures et suppressions sont interdites."""
-REACTIONS = {
-    "dossiers": "Les dossiers racontent l'affaire par fragments. Confrontez leur récit aux preuves.",
-    "evidence": "Une trace technique décrit un fait. Vérifiez l'identité liée à la session.",
-    "identity": "Un propriétaire de credential n'est pas forcément l'acteur du terminal.",
-    "logs": "Les heures commencent à former une chronologie. Cherchez une confirmation indépendante.",
-    "git": "Git montre les branches et les auteurs, mais le terminal indique qui était présent.",
+NARRATIVE_REACTIONS = {
+    "dossier-01": "Le contexte est posé. Notez l'archive et les rôles avant de suivre les traces.",
+    "dossier-02": "Ici, séparez bien le propriétaire de la credential de l'acteur de la session.",
+    "dossier-03": "Ce contrôle fixe le dernier moment où l'archive est encore confirmée.",
+    "dossier-04": "Comparez chaque action légitime avec son terminal et son horaire.",
+    "dossier-05": "Cette étape décrit la disparition. Confirmez-la avec les journaux techniques.",
+    "dossier-06": "Votre conclusion doit relier plusieurs familles de preuves indépendantes.",
+    "credentials.txt": "Cette trace donne le propriétaire de la credential, pas nécessairement l'acteur.",
+    "sessions.log": "Cette trace relie une session, une personne et un terminal.",
+    "access.log": "Comparez l'heure, la session, la credential et la cible de l'action.",
+    "terminal-history.log": "L'historique montre les commandes lancées depuis le terminal.",
+    "command-audit.txt": "Ce journal permet de confirmer la commande et son résultat.",
+    "incident-note.txt": "Cette note fixe l'heure et la cible de la disparition.",
+    "branch-log.txt": "Le journal Git confirme la branche créée autour de l'incident.",
+    "reflog.txt": "Le reflog complète la chronologie de la branche et du push.",
 }
 ALLOWED = {"find", "cat", "grep", "cut", "sort", "awk", "head", "tail", "wc", "pwd", "ls"}
 RESET = "\033[0m"
@@ -37,6 +47,14 @@ def _result_header(command: str) -> None:
     print(_line())
     print(_paint(CYAN, f"RÉSULTAT DE LA RECHERCHE : {command}"))
     print(_line("·"))
+
+
+def _narrative_reaction(command: str) -> Optional[str]:
+    """Return a hint only when the command targets a known evidence item."""
+    for marker, reaction in NARRATIVE_REACTIONS.items():
+        if marker in command:
+            return reaction
+    return None
 
 
 def _safe_path(root: Path, value: str) -> Path:
@@ -155,9 +173,9 @@ def run_shell_console(root: Path) -> int:
                 print(error, end="")
                 if "No such file or directory" in error:
                     print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
-            table = next((key for key in REACTIONS if key in line), None)
-            if table:
-                print(_paint(YELLOW, f"[Mickael] {REACTIONS[table]}"))
+            reaction = _narrative_reaction(line)
+            if reaction:
+                print(_paint(YELLOW, f"[Mickael] {reaction}"))
         except (OSError, ValueError) as error:
             print(_paint(RED, f"Commande refusée : {error}"))
     return 0
