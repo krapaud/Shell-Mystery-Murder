@@ -139,7 +139,7 @@ def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
     if stage < 1 or stage > len(REPORT_STAGES) or not report.exists():
         return
     dialogue = f"[Mickael] Étape {stage} validée. {REPORT_STAGES[stage - 1]}"
-    print(_paint(YELLOW, dialogue))
+    print(_paint(GREEN, dialogue))
     _write_session_log(log_path, f"DIALOGUE {dialogue}")
     _write_session_log(log_path, f"STAGE_VALIDATED stage={stage}")
     try:
