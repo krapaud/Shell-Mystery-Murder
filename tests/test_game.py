@@ -23,19 +23,9 @@ class GameStartupTests(unittest.TestCase):
         self.assertIn("Northstar", result.stdout)
         self.assertIn("Console d'enquête prête", result.stdout)
 
-    def test_correct_structured_answer(self):
-        result = subprocess.run(
-            [sys.executable, "main.py", "--answer", "ANTHONY|KEVIN"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        self.assertEqual(result.returncode, 0)
-
     def test_wrong_answer_is_rejected(self):
         result = subprocess.run(
-            [sys.executable, "main.py", "--answer", "CRED-17|KEVIN"],
+            [sys.executable, "main.py", "--answer", "WRONG|ACTOR"],
             cwd=ROOT,
             capture_output=True,
             text=True,

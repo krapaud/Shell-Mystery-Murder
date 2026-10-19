@@ -3,7 +3,7 @@
 import hashlib
 
 
-ANSWER_DIGEST = hashlib.sha256("ANTHONY|KEVIN".encode()).hexdigest()
+ANSWER_DIGEST = "686d8b3ffb1f06eccefd53f4405496e0fafee01e4e8414b47a5467205abeb92d"
 
 
 def validate(candidate: str) -> int:
