@@ -5,9 +5,10 @@ apparue pendant la même fenêtre et a été poussée avant que l'équipe ne con
 la disparition.
 
 Les traces techniques utilisent trois langages différents : une cible de
-fichier, un identifiant de session et une variable d'environnement. Aucun
-fichier ne donne seul l'identité complète de l'auteur.
+fichier, un identifiant de session et une variable d'environnement. Certaines
+actions sont enregistrées par leur famille de commande plutôt que par leur
+syntaxe exacte. Aucun fichier ne donne seul l'identité complète de l'auteur.
 
-Reconstituez l'ordre des actions, puis reliez la commande terminal à la session
-et la session à la personne. Enfin seulement, cherchez à qui appartenait le
-droit utilisé.
+Reconstituez l'ordre des actions en distinguant les préparatifs de l'effet
+constaté, puis reliez la commande terminal à la session et la session à la
+personne. Enfin seulement, cherchez à qui appartenait le droit utilisé.

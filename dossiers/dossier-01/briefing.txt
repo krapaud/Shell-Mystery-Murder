@@ -2,12 +2,14 @@ DOSSIER 01 : LE PROJET NORTHSTAR
 
 Le projet étudiant Northstar doit être présenté à 16 h. L'archive
 release/release-candidate.tar.gz est déposée dans l'espace de publication avant
-la revue finale.
+la revue finale. La copie de travail et la copie publiée ne sont pas
+nécessairement sur le même chemin.
 
 Kevin coordonne la livraison. Anthony administre l'infrastructure. Lisa prépare
 le paquetage, Mickael effectue la revue et Lydie vérifie la checklist de
 sécurité.
 
 Le responsable de la livraison affirme que chacun a travaillé sur sa tâche.
-Commencez par établir ce qui devait être présent, qui avait une raison légitime
-d'y accéder et à quel moment.
+Plusieurs personnes ont donc une raison légitime d'ouvrir une session, mais pas
+forcément de modifier l'archive. Commencez par établir ce qui devait être
+présent, quel état est vérifiable et à quel moment.
