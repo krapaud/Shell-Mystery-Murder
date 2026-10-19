@@ -2,6 +2,7 @@
 
 import shlex
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -16,6 +17,15 @@ REACTIONS = {
     "git": "Git montre les branches et les auteurs, mais le terminal indique qui était présent.",
 }
 ALLOWED = {"find", "cat", "grep", "cut", "sort", "awk", "head", "tail", "wc", "pwd", "ls"}
+RESET = "\033[0m"
+CYAN = "\033[36m"
+YELLOW = "\033[33m"
+RED = "\033[31m"
+GREEN = "\033[32m"
+
+
+def _paint(code: str, text: str) -> str:
+    return f"{code}{text}{RESET}" if sys.stdout.isatty() else text
 
 
 def _safe_path(root: Path, value: str) -> Path:
@@ -44,12 +54,12 @@ def _custom(root: Path, line: str) -> bool:
     if command in {".exit", ".quit"}:
         return False
     if command in {".help", ".?"}:
-        print(HELP)
+        print(_paint(CYAN, HELP))
     elif command == ".files":
-        print("dossiers/")
-        print("evidence/")
-        print("investigation-report.md")
-        print("[Mickael] Six dossiers, puis les preuves techniques : c'est votre fil d'enquête.")
+        print(_paint(CYAN, "dossiers/"))
+        print(_paint(CYAN, "evidence/"))
+        print(_paint(CYAN, "investigation-report.md"))
+        print(_paint(YELLOW, "[Mickael] Six dossiers, puis les preuves techniques : c'est votre fil d'enquête."))
     elif command == ".cat" and len(parts) == 2:
         print(_safe_path(root, parts[1]).read_text())
     elif command == ".find" and len(parts) == 2:
@@ -77,7 +87,7 @@ def run_shell_console(root: Path) -> int:
                 if not _custom(root, line):
                     break
             except (OSError, ValueError) as error:
-                print(f"Archive illisible : {error}")
+                print(_paint(RED, f"Archive illisible : {error}"))
             continue
         try:
             output, error = _run(root, line)
@@ -88,5 +98,5 @@ def run_shell_console(root: Path) -> int:
             if table:
                 print(f"[Mickael] {REACTIONS[table]}")
         except (OSError, ValueError) as error:
-            print(f"Commande refusée : {error}")
+            print(_paint(RED, f"Commande refusée : {error}"))
     return 0
