@@ -1,0 +1,18 @@
+name: Update workspace kit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Explain local kit configuration
+        run: |
+          echo 'The workspace kit and .workspace.toml are local and ignored by Git.'
+          echo 'Update the kit locally with the project sync script.'

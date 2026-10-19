@@ -13,3 +13,6 @@ une trace à confronter avec les autres.
 
 Les dossiers contiennent volontairement des informations incomplètes et des
 pistes secondaires. Le responsable ne doit pas être déduit d'un seul fichier.
+Les heures sans fuseau sont celles de Paris le 19 octobre 2026 (UTC+02:00).
+Des fragments d'une note de reprise sont dispersés dans les archives.
+Leur numéro donne l'ordre de lecture; réunissez-les pour exploiter les journaux.

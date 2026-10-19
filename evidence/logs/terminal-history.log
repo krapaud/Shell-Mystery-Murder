@@ -1,8 +1,8 @@
-2026-10-19T15:33:41Z poste-01 sha256sum /srv/northstar/release/release-candidate.tar.gz
-2026-10-19T15:39:02Z poste-03 chmod 640 /srv/northstar/package.sh
-2026-10-19T15:40:11Z poste-04 export RELEASE_DIR=/srv/northstar/release
-2026-10-19T15:40:38Z poste-04 git switch -c hotfix/release
-2026-10-19T15:41:07Z poste-04 printf hotfix >> /srv/northstar/notes.txt
-2026-10-19T15:42:16Z poste-04 rm "$RELEASE_DIR/release-candidate.tar.gz"
-2026-10-19T15:42:44Z poste-04 git push origin hotfix/release
-2026-10-19T15:43:01Z poste-05 cat /srv/northstar/release/release-candidate.tar.gz
+2026-10-19T15:33:41+02:00 poste-01 sha256sum /srv/northstar/release/release-candidate.tar.gz
+2026-10-19T15:39:02+02:00 poste-03 chmod 640 /srv/northstar/scripts/package.sh
+2026-10-19T15:40:11+02:00 poste-04 export RELEASE_DIR=/srv/northstar/release
+2026-10-19T15:40:38+02:00 poste-04 git switch -c hotfix/release
+2026-10-19T15:41:07+02:00 poste-04 printf hotfix >> /srv/northstar/notes.txt
+2026-10-19T15:42:16+02:00 poste-04 rm "$RELEASE_DIR/release-candidate.tar.gz"
+2026-10-19T15:42:44+02:00 poste-04 git push origin hotfix/release
+2026-10-19T15:43:01+02:00 poste-05 cat /srv/northstar/release/release-candidate.tar.gz

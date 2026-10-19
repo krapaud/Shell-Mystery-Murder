@@ -3,6 +3,8 @@ reported_at=2026-10-19 15:44:00
 reported_by=Lydie
 workspace=/srv/northstar
 missing_file=release/release-candidate.tar.gz
-first_observed_at=2026-10-19 15:42:16
+first_observed_at=2026-10-19 15:43:01
 related_branch=hotfix/release
 warning=Le constat indique le résultat, pas l'identité de l'auteur.
+
+Note de reprise [3/3] : command-audit.txt, colonne access_ref.

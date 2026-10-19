@@ -1,6 +1,7 @@
 """Restricted terminal console with narrative reactions."""
 
 import io
+import re
 import shlex
 import subprocess
 import sys
@@ -129,16 +130,14 @@ REPORT_STAGES = (
 
 
 def _progress_reaction(
-    command: str,
+    observed: set[str],
+    commands: set[str],
     step: int,
     consulted: set[str],
     used_commands: set[str],
 ) -> tuple[int, Optional[str]]:
-    lowered = command.lower()
-    used_commands.update(
-        token for token in ALLOWED if any(part == token for part in lowered.replace("|", " ").split())
-    )
-    consulted.update(marker for markers, _ in PROGRESS_STEPS for marker in markers if marker in lowered)
+    used_commands.update(commands)
+    consulted.update(observed)
     if step >= len(PROGRESS_STEPS):
         return step, None
     required, reaction = PROGRESS_STEPS[step]
@@ -147,21 +146,66 @@ def _progress_reaction(
     return step, None
 
 
-def _interlude_reaction(command: str, step: int, consulted: set[str]) -> Optional[str]:
-    lowered = command.lower()
+def _interlude_reaction(discovered: set[str], step: int, consulted: set[str]) -> Optional[str]:
     for (expected_step, marker), dialogue in INTERLUDE_DIALOGUES.items():
-        if expected_step == step and marker in lowered and marker not in consulted:
+        if expected_step == step and marker in discovered and marker not in consulted:
             return dialogue
     return None
 
 
-def _file_dialogue(command: str, reacted_files: set[str]) -> Optional[str]:
-    lowered = command.lower()
+def _file_dialogue(observed: set[str], reacted_files: set[str]) -> Optional[str]:
     for marker, dialogue in FILE_DIALOGUES.items():
-        if marker in lowered and marker not in reacted_files:
+        if marker in observed and marker not in reacted_files:
             reacted_files.add(marker)
             return dialogue
     return None
+
+
+def _result_evidence(root: Path, command: str, output: str, error: str) -> tuple[set[str], set[str], set[str]]:
+    """Identify files whose contents were returned, separately from discovered paths."""
+    if error or not output.strip():
+        return set(), set(), set()
+    tokens = shlex.split(command)
+    commands = {part[0] for part in _pipeline_parts(tokens) if part}
+    discovered = set()
+    for marker in ("dossiers", "evidence"):
+        if any(line.strip().startswith(marker + "/") for line in output.splitlines()):
+            discovered.add("find " + marker)
+    observed = set()
+    if commands.intersection({"cat", "grep", "head", "tail", "awk", "cut", "sort"}):
+        file_groups = []
+        for part in _pipeline_parts(tokens):
+            files = []
+            for token in part[1:]:
+                if token.startswith("-"):
+                    continue
+                try:
+                    path = _safe_path(root, token)
+                except ValueError:
+                    continue
+                if path.is_file():
+                    files.append(path)
+            if files:
+                file_groups.append(files)
+        # A command with its own files ignores the upstream pipe. Attribute
+        # the final output only to files opened by the last such command.
+        for path in (file_groups[-1] if file_groups else []):
+            relative = path.relative_to(root.resolve()).as_posix()
+            for markers, _ in PROGRESS_STEPS:
+                observed.update(marker for marker in markers if relative.startswith(marker + "/") or relative.startswith(marker + ".") or relative.startswith("dossiers/" + marker + "/"))
+            observed.update(marker for marker in FILE_DIALOGUES if relative.startswith("dossiers/" + marker + "/") or relative.startswith("evidence/" + marker + ".") or relative.startswith("evidence/" + marker + "/"))
+            discovered.add(relative)
+    return observed, discovered, commands
+
+
+def _pipeline_parts(tokens: list[str]) -> list[list[str]]:
+    parts: list[list[str]] = [[]]
+    for token in tokens:
+        if token == "|":
+            parts.append([])
+        else:
+            parts[-1].append(token)
+    return parts
 
 
 def _write_session_log(log_path: Path, message: str) -> None:
@@ -290,6 +334,82 @@ def _safe_path(root: Path, value: str) -> Path:
     return candidate
 
 
+def _validate_read_command(root: Path, parts: list[str]) -> None:
+    """Accept only the small, side-effect-free forms used in the investigation."""
+    name, args = parts[0], parts[1:]
+    if name not in ALLOWED:
+        raise ValueError("Commande interdite. Utilisez une commande de lecture Shell.")
+    if name == "find":
+        if not args or args[0].startswith("-"):
+            raise ValueError("find attend un dossier et des critères de recherche.")
+        _safe_path(root, args[0])
+        index = 1
+        while index < len(args):
+            option = args[index]
+            if option == "-print":
+                index += 1
+            elif option in {"-type", "-name", "-maxdepth", "-mindepth"} and index + 1 < len(args):
+                value = args[index + 1]
+                if option == "-type" and value not in {"f", "d"}:
+                    raise ValueError("Type find interdit.")
+                if option in {"-maxdepth", "-mindepth"} and not value.isdecimal():
+                    raise ValueError("Profondeur find invalide.")
+                index += 2
+            else:
+                raise ValueError("Option find interdite.")
+        return
+    if name == "awk":
+        if len(args) not in {1, 2} or not re.fullmatch(r"\{\s*print\s+\$[1-9][0-9]*\s*\}", args[0]):
+            raise ValueError("awk accepte uniquement {print $N}.")
+        if len(args) == 2:
+            _safe_path(root, args[1])
+        return
+    simple_flags = {
+        "cat": set(), "grep": set("niFEv"), "cut": set(),
+        "sort": set("rnu"), "head": set(), "tail": set(),
+        "wc": set("lwc"), "pwd": set(), "ls": set("la"),
+    }
+    index = 0
+    operands = []
+    while index < len(args):
+        arg = args[index]
+        if arg == "--":
+            operands.extend(args[index + 1:])
+            break
+        if name in {"head", "tail"} and arg == "-n" and index + 1 < len(args) and args[index + 1].isdecimal():
+            index += 2
+            continue
+        if name == "cut" and arg in {"-d", "-f"} and index + 1 < len(args):
+            value = args[index + 1]
+            if (arg == "-d" and len(value) != 1) or (arg == "-f" and not re.fullmatch(r"[0-9]+(?:-[0-9]*)?(?:,[0-9]+(?:-[0-9]*)?)*", value)):
+                raise ValueError("Option cut invalide.")
+            index += 2
+            continue
+        if name == "cut" and (arg.startswith("-d") or arg.startswith("-f")):
+            option, value = arg[:2], arg[2:]
+            if (option == "-d" and len(value) == 1) or (
+                option == "-f" and re.fullmatch(r"[0-9]+(?:-[0-9]*)?(?:,[0-9]+(?:-[0-9]*)?)*", value)
+            ):
+                index += 1
+                continue
+            raise ValueError("Option cut invalide.")
+        if arg.startswith("-") and arg != "-":
+            if len(arg) < 2 or not set(arg[1:]).issubset(simple_flags[name]):
+                raise ValueError(f"Option {name} interdite.")
+        else:
+            operands.append(arg)
+        index += 1
+    if name == "pwd" and operands:
+        raise ValueError("pwd n'accepte pas de chemin.")
+    if name == "grep":
+        if not operands:
+            raise ValueError("grep attend un motif.")
+        operands = operands[1:]
+    for operand in operands:
+        if operand != "-":
+            _safe_path(root, operand)
+
+
 def _run(root: Path, command: str) -> tuple[str, str]:
     tokens = shlex.split(command)
     if not tokens:
@@ -309,13 +429,7 @@ def _run(root: Path, command: str) -> tuple[str, str]:
         raise ValueError("Pipeline invalide. Chaque symbole | doit relier deux commandes.")
 
     for parts in pipelines:
-        if parts[0] not in ALLOWED:
-            raise ValueError("Commande interdite. Utilisez une commande de lecture Shell.")
-        for part in parts[1:]:
-            if part.startswith("-"):
-                continue
-            if "/" in part or part in {"dossiers", "evidence"}:
-                _safe_path(root, part)
+        _validate_read_command(root, parts)
 
     processes = []
     previous_stdout = None
@@ -338,6 +452,7 @@ def _run(root: Path, command: str) -> tuple[str, str]:
         process.wait()
         if process.stderr:
             stderr += process.stderr.read()
+            process.stderr.close()
     return stdout, stderr
 
 
@@ -359,6 +474,7 @@ def _custom(root: Path, line: str) -> bool:
     elif command == ".cat" and len(parts) == 2:
         print(_safe_path(root, parts[1]).read_text())
     elif command == ".find" and len(parts) == 2:
+        _safe_path(root, parts[1])
         print("\n".join(str(path.relative_to(root)) for path in sorted(root.glob(parts[1]))))
     elif command == ".grep" and len(parts) == 3:
         path = _safe_path(root, parts[2])
@@ -407,6 +523,16 @@ def run_shell_console(root: Path) -> int:
                     _write_session_block(log_path, "OUTPUT", rendered_output)
                 if not should_continue:
                     break
+                if line.split(maxsplit=1)[0].lower() == ".cat" and len(line.split()) == 2:
+                    observed, discovered, commands = _result_evidence(root, "cat " + shlex.quote(line.split(maxsplit=1)[1]), rendered_output, "")
+                    dialogue = _file_dialogue(observed, reacted_files)
+                    if dialogue:
+                        print(_paint(YELLOW, f"[Mickael] {dialogue}"))
+                    progress_step, progress = _progress_reaction(observed, commands, progress_step, consulted, used_commands)
+                    if progress:
+                        print(_paint(YELLOW, f"[Mickael] {progress}"))
+                        _record_stage_answer(root, progress_step, log_path)
+                        used_commands.clear()
             except (OSError, ValueError) as error:
                 print(_paint(RED, f"Archive illisible : {error}"))
                 _write_session_log(log_path, f"OUTPUT_ERROR custom_command={error}")
@@ -422,18 +548,19 @@ def run_shell_console(root: Path) -> int:
                 _write_session_block(log_path, "OUTPUT_ERROR", error)
                 if "No such file or directory" in error:
                     print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
-            file_dialogue = None if error else _file_dialogue(line, reacted_files)
+            observed, discovered, commands = _result_evidence(root, line, output, error)
+            file_dialogue = _file_dialogue(observed, reacted_files)
             if file_dialogue:
                 dialogue = f"[Mickael] {file_dialogue}"
                 print(_paint(YELLOW, dialogue))
                 _write_session_log(log_path, f"DIALOGUE {dialogue}")
-            interlude = _interlude_reaction(line, progress_step, consulted)
+            interlude = _interlude_reaction(discovered, progress_step, consulted)
             if interlude:
                 dialogue = f"[Mickael] {interlude}"
                 print(_paint(YELLOW, dialogue))
                 _write_session_log(log_path, f"DIALOGUE {dialogue}")
             progress_step, progress = _progress_reaction(
-                line, progress_step, consulted, used_commands
+                observed, commands, progress_step, consulted, used_commands
             )
             if progress:
                 dialogue = f"[Mickael] {progress}"
@@ -441,7 +568,7 @@ def run_shell_console(root: Path) -> int:
                 _write_session_log(log_path, f"DIALOGUE {dialogue}")
                 _record_stage_answer(root, progress_step, log_path)
                 used_commands.clear()
-            elif any(marker in line.lower() for markers, _ in PROGRESS_STEPS[progress_step:] for marker in markers):
+            elif observed:
                 _write_session_log(log_path, "PROGRESS pending_required_evidence")
         except (OSError, ValueError) as error:
             print(_paint(RED, f"Commande refusée : {error}"))
