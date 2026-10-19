@@ -72,6 +72,21 @@ PROGRESS_STEPS = (
     ("evidence/git", "Git confirme l'ordre des opérations. Utilisez-le pour vérifier la chronologie, pas pour conclure seul."),
 )
 
+REPORT_STAGES = (
+    "Quel est le contenu utile des dossiers et où se trouvent les preuves ?",
+    "Quels sont le projet, le fichier recherché et les rôles de l'équipe ?",
+    "Quelles correspondances avez-vous trouvées entre membres, sessions, credentials et terminaux ?",
+    "Quel est le dernier état certain de l'archive avant l'incident ?",
+    "Quelles déclarations devez-vous encore vérifier et quelles pistes semblent légitimes ?",
+    "Que savez-vous de la fenêtre pendant laquelle l'archive disparaît ?",
+    "Quelles sont les questions auxquelles votre rapport doit répondre ?",
+    "Quelle correspondance d'identité est confirmée par plusieurs fichiers ?",
+    "Que constate exactement la note d'incident, sans en déduire l'auteur ?",
+    "Quelle chronologie pouvez-vous établir à partir des logs ?",
+    "Quelle déclaration est confirmée ou contredite par les traces ?",
+    "Que confirme Git dans l'ordre des opérations ?",
+)
+
 
 def _progress_reaction(command: str, step: int) -> tuple[int, Optional[str]]:
     lowered = command.lower()
@@ -81,6 +96,37 @@ def _progress_reaction(command: str, step: int) -> tuple[int, Optional[str]]:
     if marker in lowered:
         return step + 1, reaction
     return step, None
+
+
+def _record_stage_answer(root: Path, stage: int) -> None:
+    """Store one student answer without replacing an existing answer."""
+    report = root / "investigation-report.md"
+    if stage < 1 or stage > len(REPORT_STAGES) or not report.exists():
+        return
+    print(_paint(YELLOW, f"[Mickael] Étape {stage} validée. {REPORT_STAGES[stage - 1]}"))
+    try:
+        answer = input(_paint(CYAN, "Votre note : ")).strip()
+    except EOFError:
+        print(_paint(YELLOW, "[Mickael] Aucune note saisie. L'étape reste validée, mais le rapport n'est pas complété."))
+        return
+    if not answer:
+        print(_paint(YELLOW, "[Mickael] Réponse vide : rien n'a été écrit dans le rapport."))
+        return
+    content = report.read_text()
+    marker = f"<!-- NORTHSTAR_STAGE_{stage} -->"
+    completed_marker = f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->"
+    if completed_marker in content:
+        print(_paint(YELLOW, "[Mickael] Cette réponse existe déjà. Elle n'a pas été écrasée."))
+        return
+    if marker not in content:
+        print(_paint(RED, "[Mickael] Cette rubrique de rapport est introuvable. Aucune écriture effectuée."))
+        return
+    updated = content.replace(marker, f"{answer}\n{completed_marker}", 1)
+    if updated == content:
+        print(_paint(RED, "[Mickael] Cette réponse existe déjà. Elle n'a pas été écrasée."))
+        return
+    report.write_text(updated)
+    print(_paint(GREEN, f"[Mickael] Note enregistrée dans l'étape {stage} du rapport."))
 
 
 def _safe_path(root: Path, value: str) -> Path:
@@ -203,6 +249,7 @@ def run_shell_console(root: Path) -> int:
             progress_step, progress = _progress_reaction(line, progress_step)
             if progress:
                 print(_paint(YELLOW, f"[Mickael] {progress}"))
+                _record_stage_answer(root, progress_step)
         except (OSError, ValueError) as error:
             print(_paint(RED, f"Commande refusée : {error}"))
     return 0
