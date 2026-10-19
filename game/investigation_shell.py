@@ -78,11 +78,10 @@ PROGRESS_STEPS = (
 )
 
 REPORT_STAGES = (
-    "Quel est le contenu utile des dossiers et où se trouvent les preuves ?",
     "Quels sont le projet, le fichier recherché et les rôles de l'équipe ?",
     "Quelles correspondances avez-vous trouvées entre membres, sessions, credentials et terminaux ?",
     "Quel est le dernier état certain de l'archive avant l'incident ?",
-    "Quelles déclarations devez-vous encore vérifier et quelles pistes semblent légitimes ?",
+    "Quelles déclarations devez-vous vérifier et quelles pistes semblent légitimes ?",
     "Que savez-vous de la fenêtre pendant laquelle l'archive disparaît ?",
     "Quelles sont les questions auxquelles votre rapport doit répondre ?",
     "Quelle correspondance d'identité est confirmée par plusieurs fichiers ?",
@@ -288,7 +287,7 @@ def run_shell_console(root: Path) -> int:
         readline.parse_and_bind("set editing-mode emacs")
     log_dir = root / ".student-data"
     log_dir.mkdir(exist_ok=True)
-    log_path = log_dir / f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log"
+    log_path = log_dir / f"session-{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}.log"
     _write_session_log(log_path, "SESSION_START")
     print(_paint(YELLOW, f"Journal local de session : {log_path.relative_to(root)}"))
     print(_line())
