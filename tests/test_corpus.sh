@@ -16,6 +16,7 @@ for file in \
   "$EVIDENCE/logs/access.log" \
   "$EVIDENCE/logs/terminal-history.log" \
   "$EVIDENCE/logs/command-audit.txt" \
+  "$EVIDENCE/logs/failed-commands.txt" \
   "$EVIDENCE/git/branch-log.txt" \
   "$EVIDENCE/git/reflog.txt" \
   "$EVIDENCE/permissions/current.txt" \

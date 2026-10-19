@@ -1,4 +1,4 @@
-# Northstar — L'archive disparue
+# Northstar : l'archive disparue
 
 ## L'affaire
 
@@ -31,12 +31,12 @@ Cette distinction sera importante pour votre enquête.
 Les informations sont réparties dans six dossiers. Ils ne sont pas classés
 dans l'ordre des événements :
 
-1. **Ouverture du projet** — la livraison et les responsabilités ;
-2. **Les droits** — les accès et les credentials ;
-3. **La dernière vérification** — le contrôle effectué avant l'incident ;
-4. **Les témoins** — les actions légitimes de l'équipe ;
-5. **La disparition** — l'archive manquante et la branche suspecte ;
-6. **Le rapport final** — les questions auxquelles votre enquête doit répondre.
+1. **Ouverture du projet** : la livraison et les responsabilités ;
+2. **Les droits** : les accès et les credentials ;
+3. **La dernière vérification** : le contrôle effectué avant l'incident ;
+4. **Les témoins** : les actions légitimes de l'équipe ;
+5. **La disparition** : l'archive manquante et la branche suspecte ;
+6. **Le rapport final** : les questions auxquelles votre enquête doit répondre.
 
 Les dossiers donnent le contexte. Les preuves techniques permettent de vérifier
 ou de réfuter ce qu'ils racontent.
