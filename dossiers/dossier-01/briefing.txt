@@ -1,0 +1,8 @@
+DOSSIER 01 — LE PROJET NORTHSTAR
+
+Le projet étudiant Northstar doit être présenté à 16 h. Kevin coordonne la
+livraison et dépose l'archive release/release-candidate.tar.gz dans le
+répertoire de publication. Anthony en est le propriétaire technique. Lisa,
+Mickael et Lydie interviennent pour la documentation, la revue et la sécurité.
+
+Question : qui devait pouvoir accéder à l'archive, et pour quelle raison ?

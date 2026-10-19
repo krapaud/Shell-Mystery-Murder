@@ -1,0 +1,6 @@
+member_id|name|role|usual_terminal
+m-01|Kevin|release coordinator|poste-04
+m-02|Anthony|infrastructure owner|poste-02
+m-03|Mickael|reviewer|poste-01
+m-04|Lisa|documentation|poste-03
+m-05|Lydie|security reviewer|poste-05

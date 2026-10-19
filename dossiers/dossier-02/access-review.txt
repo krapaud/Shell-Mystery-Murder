@@ -1,0 +1,8 @@
+DOSSIER 02 — LES DROITS
+
+Anthony possède la credential de l'espace release. Kevin est coordinateur de
+la livraison et doit vérifier la branche. Mickael intervient comme reviewer.
+Lisa ne travaille que sur le script de paquetage et Lydie vérifie la checklist.
+
+Ne confondez pas le propriétaire d'un droit avec la personne qui utilise une
+session ouverte sur un terminal.

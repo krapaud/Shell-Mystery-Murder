@@ -1,0 +1,12 @@
+DOSSIER 06 — RAPPORT ATTENDU
+
+Le rapport final doit répondre à ces questions :
+
+1. Quand l'archive était-elle encore intacte ?
+2. Quelle commande ou action a fait disparaître l'archive ?
+3. Quelle session et quel terminal sont liés à cette action ?
+4. Qui possédait la credential utilisée ?
+5. Quelles actions légitimes écartent les autres membres ?
+
+Une conclusion sans chronologie et sans trois familles de preuves est
+insuffisante.

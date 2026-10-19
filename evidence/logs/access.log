@@ -1,0 +1,10 @@
+timestamp|session_id|credential_id|action|target|result
+2026-10-19 15:33:41|s-07|cred-review-03|checksum|release/release-candidate.tar.gz|success
+2026-10-19 15:35:14|s-18|cred-33|write|notes/release.md|success
+2026-10-19 15:37:22|s-31|cred-17|read|release/release-candidate.tar.gz|success
+2026-10-19 15:39:11|s-18|cred-33|chmod|scripts/package.sh|success
+2026-10-19 15:40:55|s-44|cred-17|branch-create|hotfix/release|success
+2026-10-19 15:41:18|s-52|cred-17|read|release/release-candidate.tar.gz|success
+2026-10-19 15:42:16|s-44|cred-17|remove|release/release-candidate.tar.gz|success
+2026-10-19 15:42:31|s-44|cred-17|push|hotfix/release|success
+2026-10-19 15:43:12|s-52|cred-17|read|release/release-candidate.tar.gz|not-found

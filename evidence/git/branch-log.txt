@@ -1,0 +1,5 @@
+2026-10-19 15:40:38 +0200 Kevin M. (m-01) switch -c hotfix/release, session=s-44
+2026-10-19 15:41:22 +0200 Anthony R. (m-02) commit 8c21a1d: update release notes
+2026-10-19 15:42:44 +0200 Kevin M. (m-01) push hotfix/release, session=s-44
+2026-10-19 15:44:10 +0200 Lisa P. (m-04) commit 0a92b7c: chmod package script
+2026-10-19 15:45:02 +0200 Lydie S. (m-05) commit 4ef09d1: verify release checklist

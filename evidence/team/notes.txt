@@ -1,0 +1,6 @@
+2026-10-19 15:20 Anthony: release package is ready for review.
+2026-10-19 15:31 Kevin: I can verify the branch before the presentation.
+2026-10-19 15:36 Lisa: package.sh permissions adjusted on request.
+2026-10-19 15:38 Lydie: I will only check the final archive.
+2026-10-19 15:32 Mickael: checksum verified; the archive is intact before the review window.
+2026-10-19 15:46 Mickael: the archive is missing; preserve the terminal records.

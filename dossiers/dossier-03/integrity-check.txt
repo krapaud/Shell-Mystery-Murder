@@ -1,0 +1,8 @@
+DOSSIER 03 — LA DERNIÈRE VÉRIFICATION
+
+Mickael vérifie l'empreinte de l'archive depuis poste-01 avant que l'équipe ne
+commence la revue. Son contrôle est terminé avec succès. Il signale ensuite
+qu'il n'a pas modifié le répertoire de livraison.
+
+Retrouvez l'heure exacte de cette vérification et comparez-la au premier
+constat de disparition.
