@@ -68,3 +68,15 @@ Une accusation fondée sur un seul indice ne suffit pas.
 cd Shell-Mystery-Murder
 find dossiers evidence -type f -print | sort
 ```
+
+La console propose les mêmes archives sous forme de fichiers et vous permet
+d'utiliser les commandes Shell vues en cours. Quand votre preuve est complète,
+quittez-la puis validez votre conclusion :
+
+```bash
+python3 main.py --answer 'PROPRIETAIRE|ACTEUR'
+```
+
+Remplacez les deux valeurs par votre conclusion, dans cet ordre. Ne cherchez
+pas un document de correction : la réponse doit être démontrée par votre
+rapport.
