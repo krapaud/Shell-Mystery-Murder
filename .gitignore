@@ -1,0 +1,8 @@
+.codex/
+docs/
+AGENTS.md
+.workspace.toml
+.student-data/
+__pycache__/
+*.py[cod]
+.pytest_cache/
