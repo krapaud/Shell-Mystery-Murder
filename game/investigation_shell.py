@@ -326,7 +326,6 @@ def run_shell_console(root: Path) -> int:
     log_dir = root / ".student-data"
     log_dir.mkdir(exist_ok=True)
     log_path = log_dir / "session-current.log"
-    log_path.write_text("", encoding="utf-8")
     _write_session_log(log_path, "SESSION_START")
     print(_paint(YELLOW, f"Journal local de session : {log_path.relative_to(root)}"))
     print(_line())
