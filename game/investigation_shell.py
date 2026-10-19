@@ -305,7 +305,7 @@ def _custom(root: Path, line: str) -> bool:
         print(_paint(CYAN, "dossiers/"))
         print(_paint(CYAN, "evidence/"))
         print(_paint(CYAN, "investigation-report.md"))
-        print(_paint(YELLOW, "[Mickael] Six dossiers, puis les preuves techniques : c'est votre fil d'enquête."))
+        print(_paint(YELLOW, "[Mickael] Les archives sont classées en deux ensembles. Commencez par consulter les six dossiers narratifs, puis confrontez leur récit aux preuves techniques."))
     elif command == ".cat" and len(parts) == 2:
         print(_safe_path(root, parts[1]).read_text())
     elif command == ".find" and len(parts) == 2:
