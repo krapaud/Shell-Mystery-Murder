@@ -116,7 +116,29 @@ def _record_stage_answer(root: Path, stage: int) -> None:
     marker = f"<!-- NORTHSTAR_STAGE_{stage} -->"
     completed_marker = f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->"
     if completed_marker in content:
-        print(_paint(YELLOW, "[Mickael] Cette réponse existe déjà. Elle n'a pas été écrasée."))
+        print(_paint(YELLOW, "[Mickael] Une réponse existe déjà pour cette étape."))
+        try:
+            correction = input(_paint(CYAN, "Voulez-vous la corriger ? (oui/non) : ")).strip().lower()
+        except EOFError:
+            print(_paint(YELLOW, "[Mickael] Aucune confirmation reçue. La réponse existante est conservée."))
+            return
+        if correction not in {"oui", "o", "yes", "y"}:
+            print(_paint(YELLOW, "[Mickael] La réponse existante n'a pas été modifiée."))
+            return
+        try:
+            answer = input(_paint(CYAN, "Nouvelle réponse : ")).strip()
+        except EOFError:
+            print(_paint(YELLOW, "[Mickael] Aucune nouvelle réponse reçue. La réponse existante est conservée."))
+            return
+        if not answer:
+            print(_paint(YELLOW, "[Mickael] Réponse vide : la réponse existante est conservée."))
+            return
+        marker_start = content.find(completed_marker)
+        answer_line_end = content.rfind("\n", 0, marker_start)
+        answer_line_start = content.rfind("\n", 0, answer_line_end) + 1
+        updated = content[:answer_line_start] + answer + content[answer_line_end:]
+        report.write_text(updated)
+        print(_paint(GREEN, f"[Mickael] Réponse de l'étape {stage} corrigée."))
         return
     if marker not in content:
         print(_paint(RED, "[Mickael] Cette rubrique de rapport est introuvable. Aucune écriture effectuée."))
