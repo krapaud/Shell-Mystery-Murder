@@ -7,6 +7,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+try:
+    import readline
+except ImportError:  # pragma: no cover - platform fallback
+    readline = None
+
 
 HELP = """Commandes : .files, .cat <fichier>, .find <motif>, .grep <motif> <fichier>, .help (ou help), .exit.
 Les commandes Shell de lecture (find, cat, grep, cut, sort, awk, head, tail)
@@ -279,6 +284,8 @@ def _custom(root: Path, line: str) -> bool:
 def run_shell_console(root: Path) -> int:
     progress_step = 0
     consulted = set()
+    if readline is not None:
+        readline.parse_and_bind("set editing-mode emacs")
     log_dir = root / ".student-data"
     log_dir.mkdir(exist_ok=True)
     log_path = log_dir / f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log"
