@@ -1,8 +1,12 @@
 DOSSIER 03 : LA DERNIÈRE VÉRIFICATION
 
-Mickael vérifie l'empreinte de l'archive depuis poste-01 avant que l'équipe ne
-commence la revue. Son contrôle est terminé avec succès. Il signale ensuite
-qu'il n'a pas modifié le répertoire de livraison.
+Mickael affirme avoir vérifié l'empreinte de l'archive avant le début de la
+revue. Son contrôle a réussi, mais son témoignage ne donne pas à lui seul
+l'heure de disparition.
 
-Retrouvez l'heure exacte de cette vérification et comparez-la au premier
-constat de disparition.
+Retrouvez l'heure exacte du contrôle dans les traces, puis comparez-la avec la
+première lecture qui échoue. Entre ces deux moments, plusieurs personnes ont
+encore ouvert une session.
+
+Question : quel est le dernier fait certain avant l'incident et quel est le
+premier fait certain après l'incident ?

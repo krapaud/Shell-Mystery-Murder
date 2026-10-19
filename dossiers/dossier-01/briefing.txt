@@ -1,8 +1,13 @@
 DOSSIER 01 : LE PROJET NORTHSTAR
 
-Le projet étudiant Northstar doit être présenté à 16 h. Kevin coordonne la
-livraison et dépose l'archive release/release-candidate.tar.gz dans le
-répertoire de publication. Anthony en est le propriétaire technique. Lisa,
-Mickael et Lydie interviennent pour la documentation, la revue et la sécurité.
+Le projet étudiant Northstar doit être présenté à 16 h. L'archive
+release/release-candidate.tar.gz est déposée dans l'espace de publication avant
+la revue finale.
 
-Question : qui devait pouvoir accéder à l'archive, et pour quelle raison ?
+Kevin coordonne la livraison. Anthony administre l'infrastructure. Lisa prépare
+le paquetage, Mickael effectue la revue et Lydie vérifie la checklist de
+sécurité.
+
+Le responsable de la livraison affirme que chacun a travaillé sur sa tâche.
+Commencez par établir ce qui devait être présent, qui avait une raison légitime
+d'y accéder et à quel moment.

@@ -1,8 +1,11 @@
 DOSSIER 02 : LES DROITS
 
-Anthony possède la credential de l'espace release. Kevin est coordinateur de
-la livraison et doit vérifier la branche. Mickael intervient comme reviewer.
-Lisa ne travaille que sur le script de paquetage et Lydie vérifie la checklist.
+La revue des accès indique que plusieurs sessions ont utilisé des credentials
+différentes pendant la fenêtre de livraison. Certaines personnes ont donc pu
+lire l'archive sans pouvoir la supprimer.
 
-Ne confondez pas le propriétaire d'un droit avec la personne qui utilise une
-session ouverte sur un terminal.
+Associez les identifiants de membres, les sessions, les terminaux et les
+credentials. Ne déduisez pas l'acteur à partir du seul propriétaire d'un droit.
+Une session ouverte sur le bon terminal est une piste, pas encore une preuve.
+
+Question : quelles associations sont confirmées par deux fichiers différents ?
