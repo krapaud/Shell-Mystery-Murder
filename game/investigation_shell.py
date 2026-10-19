@@ -1,8 +1,10 @@
 """Restricted terminal console with narrative reactions."""
 
+import io
 import shlex
 import subprocess
 import sys
+from contextlib import redirect_stdout
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -335,11 +337,19 @@ def run_shell_console(root: Path) -> int:
         if line.lower() == "help":
             line = ".help"
         if line.startswith("."):
+            custom_output = io.StringIO()
             try:
-                if not _custom(root, line):
+                with redirect_stdout(custom_output):
+                    should_continue = _custom(root, line)
+                rendered_output = custom_output.getvalue()
+                print(rendered_output, end="")
+                if rendered_output:
+                    _write_session_block(log_path, "OUTPUT", rendered_output)
+                if not should_continue:
                     break
             except (OSError, ValueError) as error:
                 print(_paint(RED, f"Archive illisible : {error}"))
+                _write_session_log(log_path, f"OUTPUT_ERROR custom_command={error}")
             continue
         try:
             output, error = _run(root, line)
