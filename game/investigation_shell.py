@@ -47,16 +47,54 @@ def _safe_path(root: Path, value: str) -> Path:
 
 
 def _run(root: Path, command: str) -> tuple[str, str]:
-    parts = shlex.split(command)
-    if not parts or parts[0] not in ALLOWED:
+    tokens = shlex.split(command)
+    if not tokens:
         raise ValueError("Commande interdite. Utilisez une commande de lecture Shell.")
-    for part in parts[1:]:
-        if part.startswith("-") or part in {"|", ">", ">>", ";", "&&"}:
-            continue
-        if "/" in part or part in {"dossiers", "evidence"}:
-            _safe_path(root, part)
-    result = subprocess.run(parts, cwd=root, capture_output=True, text=True, check=False)
-    return result.stdout, result.stderr
+
+    pipelines: list[list[str]] = [[]]
+    for token in tokens:
+        if token == "|":
+            if not pipelines[-1]:
+                raise ValueError("Pipeline invalide. Chaque symbole | doit relier deux commandes.")
+            pipelines.append([])
+        elif token in {">", ">>", ";", "&&"}:
+            raise ValueError("Redirections et enchaînements interdits dans ce terminal.")
+        else:
+            pipelines[-1].append(token)
+    if not pipelines[-1]:
+        raise ValueError("Pipeline invalide. Chaque symbole | doit relier deux commandes.")
+
+    for parts in pipelines:
+        if parts[0] not in ALLOWED:
+            raise ValueError("Commande interdite. Utilisez une commande de lecture Shell.")
+        for part in parts[1:]:
+            if part.startswith("-"):
+                continue
+            if "/" in part or part in {"dossiers", "evidence"}:
+                _safe_path(root, part)
+
+    processes = []
+    previous_stdout = None
+    for index, parts in enumerate(pipelines):
+        process = subprocess.Popen(
+            parts,
+            cwd=root,
+            stdin=previous_stdout,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        if previous_stdout is not None:
+            previous_stdout.close()
+        previous_stdout = process.stdout
+        processes.append(process)
+
+    stdout, stderr = processes[-1].communicate()
+    for process in processes[:-1]:
+        process.wait()
+        if process.stderr:
+            stderr += process.stderr.read()
+    return stdout, stderr
 
 
 def _custom(root: Path, line: str) -> bool:
