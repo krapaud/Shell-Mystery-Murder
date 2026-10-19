@@ -22,10 +22,21 @@ CYAN = "\033[36m"
 YELLOW = "\033[33m"
 RED = "\033[31m"
 GREEN = "\033[32m"
+MAGENTA = "\033[35m"
 
 
 def _paint(code: str, text: str) -> str:
     return f"{code}{text}{RESET}" if sys.stdout.isatty() else text
+
+
+def _line(char: str = "─", size: int = 62) -> str:
+    return _paint(MAGENTA, char * size)
+
+
+def _result_header(command: str) -> None:
+    print(_line())
+    print(_paint(CYAN, f"RÉSULTAT DE LA RECHERCHE : {command}"))
+    print(_line("·"))
 
 
 def _safe_path(root: Path, value: str) -> Path:
@@ -56,6 +67,9 @@ def _custom(root: Path, line: str) -> bool:
     if command in {".help", ".?"}:
         print(_paint(CYAN, HELP))
     elif command == ".files":
+        print(_line())
+        print(_paint(CYAN, "ARCHIVES NORTHSTAR"))
+        print(_line("·"))
         print(_paint(CYAN, "dossiers/"))
         print(_paint(CYAN, "evidence/"))
         print(_paint(CYAN, "investigation-report.md"))
@@ -73,10 +87,14 @@ def _custom(root: Path, line: str) -> bool:
 
 
 def run_shell_console(root: Path) -> int:
-    print("Console d'enquête prête. Tapez .help pour commencer.")
+    print(_line())
+    print(_paint(GREEN, "Console d'enquête prête. Northstar vous attend."))
+    print(_paint(YELLOW, "Tapez .help pour afficher les commandes disponibles."))
+    print(_line())
     while True:
         try:
-            line = input("shell> ").strip()
+            prompt = _paint(CYAN, "northstar> ") if sys.stdout.isatty() else "shell> "
+            line = input(prompt).strip()
         except EOFError:
             print()
             break
@@ -91,12 +109,13 @@ def run_shell_console(root: Path) -> int:
             continue
         try:
             output, error = _run(root, line)
+            _result_header(line)
             print(output, end="")
             if error:
                 print(error, end="")
             table = next((key for key in REACTIONS if key in line), None)
             if table:
-                print(f"[Mickael] {REACTIONS[table]}")
+                print(_paint(YELLOW, f"[Mickael] {REACTIONS[table]}"))
         except (OSError, ValueError) as error:
             print(_paint(RED, f"Commande refusée : {error}"))
     return 0
