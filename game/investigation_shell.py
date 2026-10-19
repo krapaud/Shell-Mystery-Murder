@@ -77,6 +77,16 @@ PROGRESS_STEPS = (
     (("evidence/git/branch-log", "evidence/git/reflog"), "Git confirme l'ordre des opérations. Utilisez-le pour vérifier la chronologie, pas pour conclure seul."),
 )
 
+INTERLUDE_DIALOGUES = {
+    (0, "find dossiers"): "Voici les dossiers de l'affaire. Parcourez-les pour comprendre ce qui devait être protégé avant de suivre les traces.",
+    (6, "find evidence"): "Le contexte est posé. Les preuves techniques vont maintenant permettre de vérifier ce que les dossiers racontent.",
+    (6, "evidence/identity/members"): "Commencez par les identités. Les noms seuls ne suffisent pas : les identifiants feront le lien entre les archives.",
+    (7, "evidence/incident/incident-note"): "Le constat de disparition donne un point fixe dans le temps. Il faudra encore retrouver ce qui s'est passé avant.",
+    (8, "evidence/logs/access"): "Les journaux d'accès ouvrent la chronologie. Cherchez les actions qui se répondent plutôt qu'une ligne isolée.",
+    (9, "evidence/team/interviews"): "Les témoignages apportent les intentions et les alibis. Confrontez-les aux traces avant de les retenir.",
+    (10, "evidence/git/branch-log"): "La piste Git arrive en dernier. Elle peut confirmer l'ordre des opérations, mais elle ne remplacera pas les autres preuves.",
+}
+
 REPORT_STAGES = (
     "Quels sont le projet, le fichier recherché et les rôles de l'équipe ?",
     "Quelles correspondances avez-vous trouvées entre membres, sessions, credentials et terminaux ?",
@@ -101,6 +111,14 @@ def _progress_reaction(command: str, step: int, consulted: set[str]) -> tuple[in
     if all(marker in consulted for marker in required):
         return step + 1, reaction
     return step, None
+
+
+def _interlude_reaction(command: str, step: int, consulted: set[str]) -> Optional[str]:
+    lowered = command.lower()
+    for (expected_step, marker), dialogue in INTERLUDE_DIALOGUES.items():
+        if expected_step == step and marker in lowered and marker not in consulted:
+            return dialogue
+    return None
 
 
 def _write_session_log(log_path: Path, message: str) -> None:
@@ -322,6 +340,11 @@ def run_shell_console(root: Path) -> int:
                 _write_session_log(log_path, f"COMMAND_ERROR {error.strip()}")
                 if "No such file or directory" in error:
                     print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
+            interlude = _interlude_reaction(line, progress_step, consulted)
+            if interlude:
+                dialogue = f"[Mickael] {interlude}"
+                print(_paint(YELLOW, dialogue))
+                _write_session_log(log_path, f"DIALOGUE {dialogue}")
             progress_step, progress = _progress_reaction(line, progress_step, consulted)
             if progress:
                 dialogue = f"[Mickael] {progress}"
