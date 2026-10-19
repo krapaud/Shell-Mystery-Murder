@@ -1,0 +1,10 @@
+NORTHSTAR INTERVIEWS
+
+Kevin|15:47|I created hotfix/release so the presentation would not be blocked. I did not remove the archive.
+Anthony|15:48|I checked the branch from poste-02. My work was limited to the release notes.
+Lisa|15:49|I changed package.sh permissions from poste-03. I never needed to open the release archive.
+Lydie|15:50|I checked the archive after the review window. The file was already missing.
+Mickael|15:51|My checksum was successful before the review. I left poste-01 before the branch was created.
+
+Mentor note: statements are leads, not conclusions. Compare each claim with
+the session window, terminal history, access log and Git evidence.

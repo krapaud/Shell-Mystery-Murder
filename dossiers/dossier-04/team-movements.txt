@@ -1,8 +1,13 @@
 DOSSIER 04 : LES TÉMOINS
 
-Lisa modifie les permissions du script package.sh. Lydie ouvre une session de
-lecture pour consulter la checklist. Anthony met à jour les notes de release.
-Ces actions sont visibles dans plusieurs traces, mais aucune ne suffit seule
-à expliquer la disparition de l'archive.
+Les déclarations ne racontent pas exactement la même histoire.
 
-Établissez une chronologie avant d'accuser quelqu'un.
+Lisa dit avoir uniquement sécurisé le script de paquetage. Anthony dit avoir
+contrôlé la branche avant la revue. Lydie dit avoir consulté l'archive après le
+contrôle d'intégrité. Kevin dit avoir créé une branche de secours pour éviter
+de bloquer la présentation.
+
+Leurs déclarations sont conservées dans `evidence/team/interviews.txt`.
+Vérifiez chaque déclaration par l'heure, le terminal et la cible de l'action.
+Une action inhabituelle n'est pas forcément la suppression recherchée, et une
+déclaration exacte sur un point ne valide pas tout le reste.

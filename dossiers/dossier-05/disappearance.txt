@@ -1,8 +1,13 @@
 DOSSIER 05 : L'INCIDENT
 
 À 15 h 42, l'archive n'est plus disponible. Une branche hotfix/release est
-apparue quelques minutes auparavant et a été poussée depuis poste-04.
+apparue pendant la même fenêtre et a été poussée avant que l'équipe ne constate
+la disparition.
 
-Le journal d'accès parle d'une credential appartenant à Anthony. L'historique
-du terminal parle d'une variable RELEASE_DIR. Ces deux éléments doivent être
-reliés à une session et à une personne.
+Les traces techniques utilisent trois langages différents : une cible de
+fichier, un identifiant de session et une variable d'environnement. Aucun
+fichier ne donne seul l'identité complète de l'auteur.
+
+Reconstituez l'ordre des actions, puis reliez la commande terminal à la session
+et la session à la personne. Enfin seulement, cherchez à qui appartenait le
+droit utilisé.
