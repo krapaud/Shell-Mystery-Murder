@@ -1,4 +1,4 @@
-DOSSIER 02 — LES DROITS
+DOSSIER 02 : LES DROITS
 
 Anthony possède la credential de l'espace release. Kevin est coordinateur de
 la livraison et doit vérifier la branche. Mickael intervient comme reviewer.

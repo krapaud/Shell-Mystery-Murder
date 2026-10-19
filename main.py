@@ -12,7 +12,7 @@ ROOT = Path(__file__).parent
 def main() -> int:
     arguments = sys.argv[1:]
     if not arguments:
-        print("Northstar — L'archive disparue")
+        print("Northstar : l'archive disparue")
         print("Mickael vous appelle : l'archive de livraison a disparu.")
         print("Retrouvez la session, la credential utilisée et l'acteur de l'action.")
         print("Quand votre preuve est complète, quittez la console et relancez avec --answer 'PROPRIETAIRE|ACTEUR'.")
