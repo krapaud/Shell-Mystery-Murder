@@ -127,6 +127,14 @@ def _write_session_log(log_path: Path, message: str) -> None:
         log.write(f"[{timestamp}] {message}\n")
 
 
+def _write_session_block(log_path: Path, label: str, content: str) -> None:
+    timestamp = datetime.now().astimezone().isoformat(timespec="seconds")
+    with log_path.open("a", encoding="utf-8") as log:
+        log.write(f"[{timestamp}] {label}_BEGIN\n")
+        log.write(content if content.endswith("\n") else f"{content}\n")
+        log.write(f"[{timestamp}] {label}_END\n")
+
+
 def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
     """Store one student answer without replacing an existing answer."""
     report = root / "investigation-report.md"
@@ -150,6 +158,7 @@ def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
         _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=empty")
         return
+    _write_session_log(log_path, f"INPUT report_stage={stage} value={answer}")
     content = report.read_text()
     marker = f"<!-- NORTHSTAR_STAGE_{stage} -->"
     completed_marker = f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->"
@@ -186,6 +195,7 @@ def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
             _write_session_log(log_path, f"DIALOGUE {dialogue}")
             _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=empty")
             return
+        _write_session_log(log_path, f"INPUT report_correction_stage={stage} value={answer}")
         marker_start = content.find(completed_marker)
         answer_line_end = content.rfind("\n", 0, marker_start)
         answer_line_start = content.rfind("\n", 0, answer_line_end) + 1
@@ -321,7 +331,7 @@ def run_shell_console(root: Path) -> int:
             break
         if not line:
             continue
-        _write_session_log(log_path, f"COMMAND {line}")
+        _write_session_log(log_path, f"INPUT command={line}")
         if line.lower() == "help":
             line = ".help"
         if line.startswith("."):
@@ -335,9 +345,11 @@ def run_shell_console(root: Path) -> int:
             output, error = _run(root, line)
             _result_header(line)
             print(output, end="")
+            if output:
+                _write_session_block(log_path, "OUTPUT", output)
             if error:
                 print(error, end="")
-                _write_session_log(log_path, f"COMMAND_ERROR {error.strip()}")
+                _write_session_block(log_path, "OUTPUT_ERROR", error)
                 if "No such file or directory" in error:
                     print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
             interlude = _interlude_reaction(line, progress_step, consulted)
@@ -355,6 +367,6 @@ def run_shell_console(root: Path) -> int:
                 _write_session_log(log_path, "PROGRESS pending_required_evidence")
         except (OSError, ValueError) as error:
             print(_paint(RED, f"Commande refusée : {error}"))
-            _write_session_log(log_path, f"COMMAND_REJECTED {error}")
+            _write_session_log(log_path, f"OUTPUT_ERROR command_rejected={error}")
     _write_session_log(log_path, "SESSION_END")
     return 0
