@@ -272,7 +272,7 @@ def run_shell_console(root: Path) -> int:
             progress_step, progress = _progress_reaction(line, progress_step, consulted)
             if progress:
                 print(_paint(YELLOW, f"[Mickael] {progress}"))
-                _record_stage_answer(root, progress_step + 1)
+                _record_stage_answer(root, progress_step)
         except (OSError, ValueError) as error:
             print(_paint(RED, f"Commande refusée : {error}"))
     return 0
