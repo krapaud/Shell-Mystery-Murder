@@ -23,6 +23,19 @@ class GameStartupTests(unittest.TestCase):
         self.assertIn("Northstar", result.stdout)
         self.assertIn("Console d'enquête prête", result.stdout)
 
+    def test_read_only_pipeline_is_supported(self):
+        result = subprocess.run(
+            [sys.executable, "main.py"],
+            cwd=ROOT,
+            input="find evidence -type f -print | sort\n.exit\n",
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("evidence/logs/terminal-history.log", result.stdout)
+        self.assertNotIn("unknown primary or operator", result.stdout)
+
     def test_wrong_answer_is_rejected(self):
         result = subprocess.run(
             [sys.executable, "main.py", "--answer", "WRONG|ACTOR"],
