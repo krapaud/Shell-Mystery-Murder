@@ -37,21 +37,22 @@ def main() -> int:
         title("Northstar : L'archive disparue")
         section(
             "ALERTE",
-            "L'archive de livraison a disparu quelques minutes avant la présentation.\n"
-            "Une branche hotfix/release est apparue dans le dépôt.",
+            "À moins de vingt minutes de la présentation, Lydie signale que\n"
+            "l'archive publiée ne s'ouvre plus. Une branche hotfix/release vient\n"
+            "d'apparaître dans le dépôt, et les récits ne concordent pas.",
             Theme.RED,
         )
         section(
             "BRIEFING DE MICKAEL",
-            "Le contrôle d'intégrité était terminé avant l'incident.\n"
-            "Votre mission consiste à retrouver la chronologie, le propriétaire\n"
-            "de l'accès utilisé et l'acteur présent sur le terminal.",
+            "À 15:33, j'ai validé l'empreinte et cru que la revue était couverte.\n"
+            "À 15:43, Lydie m'a dit que l'archive n'était plus là. Je ne relancerai\n"
+            "rien avant d'avoir compris ce qui s'est passé entre les deux.",
         )
         section(
             "MÉTHODE",
-            "1. Ouvrez les six dossiers narratifs.\n"
-            "2. Recoupez-les avec les preuves techniques.\n"
-            "3. Écartez les actions légitimes.\n"
+            "1. Comprenez ce que chacun affirme avoir fait.\n"
+            "2. Rassemblez les fragments et suivez la référence trouvée.\n"
+            "3. Distinguez le droit utilisé de la personne au terminal.\n"
             "4. Rédigez votre rapport avant de conclure.",
             Theme.GREEN,
         )

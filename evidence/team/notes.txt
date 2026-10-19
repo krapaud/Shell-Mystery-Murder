@@ -1,8 +1,8 @@
-2026-10-19 15:20 Anthony: release package is ready for review.
-2026-10-19 15:31 Kevin: I can verify the branch before the presentation.
-2026-10-19 15:32 Mickael: contrôle d'empreinte à lancer avant la revue.
-2026-10-19 15:36 Lisa: droits de package.sh à revoir avant la livraison.
-2026-10-19 15:38 Lydie: I will only check the final archive.
-2026-10-19 15:46 Mickael: the archive is missing; preserve the terminal records.
+2026-10-19 15:20 Anthony: cred-17 reste active pour assurer le relais; je ne serai pas toujours au poste-02.
+2026-10-19 15:31 Kevin: si le dépôt bloque, je reprends le déploiement depuis poste-04.
+2026-10-19 15:32 Mickael: je lance l'empreinte de la copie publiée avant la revue.
+2026-10-19 15:36 Lisa: c'est le mode du script qu'il faut corriger, pas le paquet déjà publié.
+2026-10-19 15:38 Lydie: je vérifierai le résultat depuis le poste-05; gardez le ticket ouvert si ça échoue.
+2026-10-19 15:46 Mickael: l'archive manque. Ne relancez rien; gardez l'état et les journaux tels quels.
 
-Note de reprise [1/3] : l'export d'accès masque une cible sous
+Note de reprise [1/3] : l'export donne un droit et une référence, pas encore la personne au clavier.

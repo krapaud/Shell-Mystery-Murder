@@ -3,4 +3,4 @@
 2026-10-19 15:40:38 +0200 HEAD@{0}: checkout: moving from main to hotfix/release
 2026-10-19 15:42:44 +0200 remote: push hotfix/release; workstation=poste-04
 
-Note de reprise [2/3] : op-417 ; sa correspondance se trouve dans
+Note de reprise [2/3] : op-417 ne nomme ni la cible ni la personne qui a agi.

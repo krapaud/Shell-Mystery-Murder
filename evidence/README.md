@@ -12,5 +12,7 @@ fichier. Le nom d'un commit ou le propriétaire d'une credential ne suffit pas
 
 Convention des exports : les heures sans suffixe sont locales à Paris le
 19 octobre 2026 (UTC+02:00). Les horodatages ISO du terminal portent leur
-décalage explicite. Les billets `Note de reprise [n/3]` forment une instruction
-en trois fragments, conservée dans des sources différentes.
+décalage explicite. Les trois fragments de la note de reprise doivent être
+rassemblés dans l'ordre de leur numéro. Ils rappellent que le droit utilisé,
+la personne connectée et l'action sur un fichier sont trois faits distincts.
+La note aide à formuler les recoupements, mais ne donne pas le nom de l'acteur.

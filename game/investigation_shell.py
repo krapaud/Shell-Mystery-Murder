@@ -1,5 +1,7 @@
 """Restricted terminal console with narrative reactions."""
 
+from __future__ import annotations
+
 import io
 import re
 import shlex
@@ -8,7 +10,6 @@ import sys
 from contextlib import redirect_stdout
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 try:
     import readline
@@ -16,7 +17,7 @@ except ImportError:  # pragma: no cover - platform fallback
     readline = None
 
 
-HELP = """Commandes : .files, .cat <fichier>, .find <motif>, .grep <motif> <fichier>, .help (ou help), .exit.
+HELP = """Commandes : .files, .cat <fichier>, .find <motif>, .grep <motif> <fichier>, .correct <étape>, .help (ou help), .exit.
 Les commandes Shell de lecture (find, cat, grep, cut, sort, awk, head, tail)
 peuvent aussi être utilisées. Les écritures et suppressions sont interdites."""
 NARRATIVE_REACTIONS = {
@@ -36,7 +37,7 @@ NARRATIVE_REACTIONS = {
     "reflog.txt": "Le reflog complète la chronologie de la branche et du push.",
 }
 ALLOWED = {"find", "cat", "grep", "cut", "sort", "awk", "head", "tail", "wc", "pwd", "ls"}
-COMMAND_WORDS = ALLOWED | {"help", ".help", ".files", ".cat", ".find", ".grep", ".exit", ".quit"}
+COMMAND_WORDS = ALLOWED | {"help", ".help", ".files", ".cat", ".find", ".grep", ".correct", ".exit", ".quit"}
 RESET = "\033[0m"
 CYAN = "\033[36m"
 YELLOW = "\033[33m"
@@ -59,7 +60,7 @@ def _result_header(command: str) -> None:
     print(_line("·"))
 
 
-def _narrative_reaction(command: str) -> Optional[str]:
+def _narrative_reaction(command: str) -> str | None:
     """Return a hint only when the command targets a known evidence item."""
     for marker, reaction in NARRATIVE_REACTIONS.items():
         if marker in command:
@@ -68,12 +69,12 @@ def _narrative_reaction(command: str) -> Optional[str]:
 
 
 PROGRESS_STEPS = (
-    (("dossier-01", "dossier-02", "dossier-03", "dossier-04", "dossier-05", "dossier-06"), "Les six dossiers sont parcourus. Le contexte est posé ; vous pouvez maintenant confronter le récit aux preuves techniques."),
-    (("evidence/identity/members", "evidence/identity/credentials", "evidence/identity/sessions"), "Les identités sont séparées des actions. Les correspondances sont prêtes à être vérifiées."),
-    (("evidence/incident/incident-note",), "Le constat est établi. Il décrit le résultat, pas encore l'auteur."),
-    (("evidence/logs/access", "evidence/logs/terminal-history", "evidence/logs/command-audit", "evidence/logs/failed-commands"), "La chronologie technique se précise. Comparez les succès, les actions et le premier échec."),
-    (("evidence/team/notes", "evidence/team/interviews"), "Les témoignages sont confrontés aux traces. Une déclaration ne vaut que si les horaires la confirment."),
-    (("evidence/git/branch-log", "evidence/git/reflog"), "Git confirme l'ordre des opérations. Utilisez-le pour vérifier la chronologie, pas pour conclure seul."),
+    (("dossier-01", "dossier-02", "dossier-03", "dossier-04", "dossier-05", "dossier-06"), "Je pensais que l'empreinte validée clôturait la question. Il faut maintenant distinguer ce qu'elle prouve de ce qui s'est passé ensuite."),
+    (("evidence/identity/members", "evidence/identity/credentials", "evidence/identity/sessions"), "J'ai d'abord suivi le nom attaché à cred-17. Les sessions me forcent à distinguer le titulaire du compte connecté et de la personne devant l'écran."),
+    (("evidence/incident/incident-note",), "Le premier échec de Lydie fixe une borne, pas l'instant de la disparition. Il nous manque encore le dernier état vérifiable."),
+    (("evidence/logs/access", "evidence/logs/terminal-history", "evidence/logs/command-audit", "evidence/logs/failed-commands"), "La lecture réussit à 15:41:18 et échoue à 15:43:01 : une fenêtre de 1 min 43. op-417 relie l'export à une opération sur l'archive; ma piste Git n'explique pas encore ce geste."),
+    (("evidence/team/notes", "evidence/team/interviews", "team-interview:Kevin", "team-interview:Anthony", "team-interview:Lisa", "team-interview:Lydie", "team-interview:Mickael"), "Lydie n'a pas reconnu le visage. Kevin confirme être passé au poste-04, mais nie avoir touché l'archive. Quelle trace relie cette présence à la session ?"),
+    (("evidence/git/branch-log", "evidence/git/reflog"), "Le push arrive 28 secondes après l'opération sur le fichier. J'avais pris la branche pour la cause; la chronologie montre qu'elle accompagne l'incident. Séparons maintenant le compte du titulaire."),
 )
 
 # Chaque étape demande une vraie opération de recherche Shell. Les fichiers
@@ -90,42 +91,42 @@ STEP_COMMANDS = (
 
 INTERLUDE_DIALOGUES = {
     (0, "find dossiers"): "Voici les dossiers de l'affaire. Parcourez-les pour comprendre ce qui devait être protégé avant de suivre les traces.",
-    (6, "find evidence"): "Le contexte est posé. Les preuves techniques vont maintenant permettre de vérifier ce que les dossiers racontent.",
-    (6, "evidence/identity/members"): "Commencez par les identités. Les noms seuls ne suffisent pas : les identifiants feront le lien entre les archives.",
-    (7, "evidence/incident/incident-note"): "Le constat de disparition donne un point fixe dans le temps. Il faudra encore retrouver ce qui s'est passé avant.",
-    (8, "evidence/logs/access"): "Les journaux d'accès ouvrent la chronologie. Cherchez les actions qui se répondent plutôt qu'une ligne isolée.",
-    (9, "evidence/team/interviews"): "Les témoignages apportent les intentions et les alibis. Confrontez-les aux traces avant de les retenir.",
-    (10, "evidence/git/branch-log"): "La piste Git arrive en dernier. Elle peut confirmer l'ordre des opérations, mais elle ne remplacera pas les autres preuves.",
+    (1, "find evidence"): "Le récit ne suffit plus. Conservons chaque hypothèse et vérifions-la dans les traces techniques.",
+    (1, "evidence/identity/members"): "Avant d'accuser qui que ce soit, relions les noms aux identifiants qui apparaissent dans les journaux.",
+    (2, "evidence/incident/incident-note"): "Le constat fixe le premier échec. Il ne révèle ni l'instant de l'action ni la personne qui l'a faite.",
+    (3, "evidence/logs/access"): "Les accès sont proches dans le temps, mais ils ne désignent pas tous la même session. Gardons la chronologie exacte.",
+    (4, "evidence/team/interviews"): "Nous avons maintenant des versions humaines. Je vais les confronter aux traces avant de décider lesquelles tiennent.",
+    (5, "evidence/git/branch-log"): "Il reste la piste qui m'a d'abord détourné de l'archive. Voyons ce que Git confirme réellement.",
 }
 
 FILE_DIALOGUES = {
-    "dossier-01": "Le briefing distingue la copie de travail de la copie publiée. Notez aussi les rôles : une raison légitime d'ouvrir une session ne prouve pas une modification.",
-    "dossier-02": "Une credential partagée apparaît dans plusieurs sessions. Ne retenez donc pas le premier nom : reliez chaque action à sa session et à son terminal.",
-    "dossier-03": "L'heure écrite dans un témoignage peut différer de celle du terminal. Cherchez le dernier état certain et mesurez la fenêtre jusqu'au constat.",
-    "dossier-04": "Les témoins peuvent être exacts sur leur objectif mais imprécis sur l'heure ou la cible. C'est la comparaison des quatre champs qui les départagera.",
-    "dossier-05": "Séparez les préparatifs, l'action qui produit l'effet et sa découverte. Les journaux n'emploient pas tous le même niveau de détail.",
+    "dossier-01": "Le dossier sépare la copie publiée du dépôt. Je n'avais vérifié que l'empreinte; il faut retrouver exactement ce que ce contrôle couvrait.",
+    "dossier-02": "Une credential apparaît dans plusieurs sessions. Son titulaire, le compte de session et la personne au terminal ne sont peut-être pas la même personne.",
+    "dossier-03": "J'ai traité mon contrôle comme une garantie. Le texte distingue pourtant une empreinte à un instant précis d'un accès réussi plus tard.",
+    "dossier-04": "Ces résumés ne sont pas encore des preuves. Je veux entendre les déclarations exactes avant de choisir la version qui m'arrange.",
+    "dossier-05": "La branche et l'archive disparaissent dans la même fenêtre, mais pas forcément par la même action. Séparons création, suppression et constat.",
     "dossier-06": "La conclusion devra expliquer la chaîne complète : état, action, session, acteur et propriétaire. Une correspondance isolée ne suffira pas.",
     "identity/members": "La liste relie les noms aux member_id. Ces identifiants permettent maintenant de lire les journaux sans deviner les personnes.",
-    "identity/credentials": "Chaque credential a un propriétaire et un périmètre. Un propriétaire d'accès n'est pas automatiquement l'acteur devant le terminal.",
-    "identity/sessions": "Les sessions ajoutent un terminal et une période à chaque utilisateur. Comparez ces horaires avec ceux des commandes et des accès.",
+    "identity/credentials": "cred-17 est au nom d'Anthony, mais ce relevé ne dit pas qui s'en est servi. Je me suis arrêté trop tôt sur cette ligne.",
+    "identity/sessions": "La même credential apparaît dans s-31, s-44 et s-52. Les personnes et les terminaux diffèrent; gardez ces trois sessions séparées.",
     "incident/incident-note": "Le constat indique quel fichier ou chemin a disparu et quand cela a été remarqué. Il décrit l'effet, pas encore son auteur.",
-    "logs/access": "Ces lignes combinent action, credential, session et cible. Relevez ces quatre champs : c'est leur correspondance qui donnera du poids à la piste.",
-    "logs/terminal-history": "L'historique montre les commandes réellement saisies, notamment la variable de chemin et les opérations Git. Il faudra les rattacher à une session.",
-    "logs/command-audit": "L'audit précise le terminal, l'action et son statut. Une opération réussie ne doit pas être confondue avec une simple tentative.",
-    "logs/failed-commands": "Les échecs indiquent ce qui a été tenté sans modifier l'état attendu. Ils peuvent préciser l'intention et la chronologie, mais pas prouver seuls le vol.",
+    "logs/access": "La lecture de 15:41:18 réussit après mon contrôle d'empreinte. J'avais laissé presque huit minutes sans preuve entre les deux.",
+    "logs/terminal-history": "Le terminal montre `rm` après la définition de RELEASE_DIR. Il faut vérifier que l'audit relie bien cette action au chemin de l'archive.",
+    "logs/command-audit": "op-417 apparaît sur une opération réussie visant l'archive. La colonne access_ref relie les journaux, mais n'identifie pas encore la personne.",
+    "logs/failed-commands": "Le dépôt Git ne contenait pas l'archive, mais cela ne signifie pas qu'elle était absente de l'espace publié. La lecture de Lydie est le premier échec pertinent.",
     "team/notes": "Ces notes donnent le contexte humain autour des horaires et des accès. Utilisez-les comme pistes à vérifier, pas comme preuves isolées.",
-    "team/interviews": "Les témoignages apportent des déclarations et des horaires. La piste devient solide seulement si les logs confirment ce qui a été observé.",
-    "git/branch-log": "Le journal Git montre les mouvements de la branche et les changements publiés. Comparez chaque horodatage avec la fenêtre de disparition.",
-    "git/reflog": "Le reflog complète le journal de branche en conservant l'ordre local des opérations. Il peut confirmer une séquence, pas l'identité à lui seul.",
+    "team/interviews": "Lydie n'a pas identifié la personne qu'elle a vue. Kevin, lui, admet être passé au poste-04 mais nie la suppression. Les sessions peuvent-elles départager ces propos ?",
+    "git/branch-log": "La branche est créée avant l'opération sur l'archive, puis poussée après. C'est le journal de commandes, pas le push, qui explique l'effet constaté.",
+    "git/reflog": "Le reflog confirme le push à 15:42:44, après l'opération de 15:42:16. J'ai confondu deux événements proches parce qu'ils partageaient le même terminal.",
 }
 
 REPORT_STAGES = (
-    "Quels sont le projet, le fichier recherché, les rôles et les questions de l'enquête ?",
-    "Quelles correspondances avez-vous trouvées entre membres, sessions, credentials et terminaux ?",
-    "Que constate exactement la note d'incident, sans en déduire l'auteur ?",
-    "Quelle chronologie pouvez-vous établir à partir des logs ?",
-    "Quelles déclarations sont confirmées ou contredites par les traces ?",
-    "Que confirme Git dans l'ordre des opérations ?",
+    "Qu'est-ce qui devait être livré, et quelle certitude Mickael avait-il au début ?",
+    "Qui possède la credential, et quelles sessions l'ont utilisée ?",
+    "À quel moment l'absence est-elle constatée ? Qu'est-ce que ce constat ne prouve pas ?",
+    "À quoi correspond op-417, et comment le savez-vous ?",
+    "Quel témoignage change votre hypothèse, et quelle trace le corrobore ?",
+    "Que confirme Git sur la séquence, le poste et la session ?",
 )
 
 
@@ -135,25 +136,33 @@ def _progress_reaction(
     step: int,
     consulted: set[str],
     used_commands: set[str],
-) -> tuple[int, Optional[str]]:
+) -> tuple[int, str | None]:
     used_commands.update(commands)
     consulted.update(observed)
     if step >= len(PROGRESS_STEPS):
         return step, None
     required, reaction = PROGRESS_STEPS[step]
-    if all(marker in consulted for marker in required) and STEP_COMMANDS[step].issubset(used_commands):
+    command_complete = STEP_COMMANDS[step].issubset(used_commands)
+    if step > 0:
+        required_files = tuple(marker for marker in required if "/" in marker)
+        command_complete = (
+            command_complete
+            and STEP_COMMANDS[step].issubset(commands)
+            and any(marker in observed for marker in required_files)
+        )
+    if all(marker in consulted for marker in required) and command_complete:
         return step + 1, reaction
     return step, None
 
 
-def _interlude_reaction(discovered: set[str], step: int, consulted: set[str]) -> Optional[str]:
+def _interlude_reaction(discovered: set[str], step: int, consulted: set[str]) -> str | None:
     for (expected_step, marker), dialogue in INTERLUDE_DIALOGUES.items():
-        if expected_step == step and marker in discovered and marker not in consulted:
+        if expected_step == step and marker not in consulted and any(marker in item for item in discovered):
             return dialogue
     return None
 
 
-def _file_dialogue(observed: set[str], reacted_files: set[str]) -> Optional[str]:
+def _file_dialogue(observed: set[str], reacted_files: set[str]) -> str | None:
     for marker, dialogue in FILE_DIALOGUES.items():
         if marker in observed and marker not in reacted_files:
             reacted_files.add(marker)
@@ -192,8 +201,12 @@ def _result_evidence(root: Path, command: str, output: str, error: str) -> tuple
         for path in (file_groups[-1] if file_groups else []):
             relative = path.relative_to(root.resolve()).as_posix()
             for markers, _ in PROGRESS_STEPS:
-                observed.update(marker for marker in markers if relative.startswith(marker + "/") or relative.startswith(marker + ".") or relative.startswith("dossiers/" + marker + "/"))
-            observed.update(marker for marker in FILE_DIALOGUES if relative.startswith("dossiers/" + marker + "/") or relative.startswith("evidence/" + marker + ".") or relative.startswith("evidence/" + marker + "/"))
+                observed.update(marker for marker in markers if relative.startswith((marker + "/", marker + ".", "dossiers/" + marker + "/")))
+            observed.update(marker for marker in FILE_DIALOGUES if relative.startswith(("dossiers/" + marker + "/", "evidence/" + marker + ".", "evidence/" + marker + "/")))
+            if relative == "evidence/team/interviews.txt":
+                for person in ("Kevin", "Anthony", "Lisa", "Lydie", "Mickael"):
+                    if any(line.startswith(f"{person}|") for line in output.splitlines()):
+                        observed.add(f"team-interview:{person}")
             discovered.add(relative)
     return observed, discovered, commands
 
@@ -222,15 +235,137 @@ def _write_session_block(log_path: Path, label: str, content: str) -> None:
         log.write(f"[{timestamp}] {label}_END\n")
 
 
+def _narrate(log_path: Path, dialogue: str, color: str = YELLOW) -> None:
+    message = f"[Mickael] {dialogue}"
+    print(_paint(color, message))
+    _write_session_log(log_path, f"DIALOGUE {message}")
+
+
 def _looks_like_command(value: str) -> bool:
     first_word = value.split(maxsplit=1)[0].lower()
     return first_word in COMMAND_WORDS
 
 
-def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
+def _record_stage_answer(
+    root: Path, stage: int, log_path: Path, *, correction: bool = False
+) -> None:
     """Store one student answer without replacing an existing answer."""
     report = root / "investigation-report.md"
     if stage < 1 or stage > len(REPORT_STAGES) or not report.exists():
+        return
+    content = report.read_text()
+    marker = f"<!-- NORTHSTAR_STAGE_{stage} -->"
+    completed_marker = f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->"
+    note_start_marker = f"<!-- NORTHSTAR_STAGE_{stage}_NOTE_BEGIN -->"
+    note_end_marker = f"<!-- NORTHSTAR_STAGE_{stage}_NOTE_END -->"
+    completion_count = content.count(completed_marker)
+    has_answer = completion_count == 1
+    has_note_markers = note_start_marker in content or note_end_marker in content
+    if completion_count > 1:
+        dialogue = "[Mickael] Les marqueurs de cette étape sont incohérents. Le rapport reste intact."
+        print(_paint(YELLOW, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
+        _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=malformed_report_markers")
+        return
+    if has_note_markers:
+        note_start = content.find(note_start_marker)
+        note_end = content.find(note_end_marker)
+        completion = content.find(completed_marker)
+        if (
+            content.count(note_start_marker) != 1
+            or content.count(note_end_marker) != 1
+            or not note_start < note_end < completion
+        ):
+            dialogue = "[Mickael] Les marqueurs de cette étape sont incohérents. Le rapport reste intact."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=malformed_report_markers")
+            return
+    if correction and not has_answer:
+        dialogue = f"[Mickael] Aucune réponse enregistrée pour l'étape {stage}; il n'y a rien à corriger."
+        print(_paint(YELLOW, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
+        _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=no_existing_answer")
+        return
+    if has_answer:
+        dialogue = "[Mickael] Une réponse existe déjà pour cette étape."
+        print(_paint(YELLOW, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
+        _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=already_exists")
+        try:
+            correction = input(_paint(CYAN, "Voulez-vous la corriger ? (oui/non) : ")).strip().lower()
+        except EOFError:
+            dialogue = "[Mickael] Aucune confirmation reçue. La réponse existante est conservée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=no_confirmation")
+            return
+        if correction not in {"oui", "o", "yes", "y"}:
+            dialogue = "[Mickael] La réponse existante n'a pas été modifiée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=declined")
+            return
+        try:
+            answer = input(_paint(CYAN, "Nouvelle note : ")).strip()
+        except EOFError:
+            dialogue = "[Mickael] Aucune nouvelle réponse reçue. La réponse existante est conservée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=missing")
+            return
+        _write_session_log(log_path, f"INPUT report_correction_stage={stage} value={answer}")
+        if not answer:
+            dialogue = "[Mickael] Réponse vide : la réponse existante est conservée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=empty")
+            return
+        if _looks_like_command(answer):
+            dialogue = "[Mickael] Cette étape attend une note d'enquête, pas une commande. La réponse existante est conservée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=command_rejected")
+            return
+        note_start = content.find(note_start_marker)
+        note_end = content.find(note_end_marker)
+        if has_note_markers:
+            value_start = content.find("\n", note_start) + 1
+            updated = content[:value_start] + answer + "\n" + content[note_end:]
+        else:
+            heading = re.search(rf"(?m)^### Étape {stage}\s*:.*$", content)
+            completion_position = content.find(completed_marker)
+            legacy_note = (
+                content[heading.end():completion_position].strip("\n")
+                if heading and completion_position > heading.end()
+                else ""
+            )
+            if len(legacy_note.splitlines()) != 1 or not legacy_note.strip():
+                dialogue = "[Mickael] Je ne peux pas isoler cette ancienne note sans risquer d'effacer autre chose. Rien n'a été modifié."
+                print(_paint(YELLOW, dialogue))
+                _write_session_log(log_path, f"DIALOGUE {dialogue}")
+                _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=ambiguous_legacy_note")
+                return
+            updated = (
+                content[:heading.end()]
+                + "\n"
+                + answer
+                + "\n"
+                + content[completion_position:]
+            )
+        report.write_text(updated)
+        dialogue = f"[Mickael] Réponse de l'étape {stage} corrigée."
+        print(_paint(GREEN, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
+        _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=updated")
+        return
+    if correction:
+        return
+    if marker not in content:
+        dialogue = "[Mickael] Cette rubrique de rapport est introuvable. Aucune écriture effectuée."
+        print(_paint(RED, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
+        _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=missing_marker")
         return
     dialogue = f"[Mickael] Étape {stage} validée. {REPORT_STAGES[stage - 1]}"
     print(_paint(GREEN, dialogue))
@@ -257,66 +392,8 @@ def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
         _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=command_rejected")
         return
-    content = report.read_text()
-    marker = f"<!-- NORTHSTAR_STAGE_{stage} -->"
-    completed_marker = f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->"
-    if completed_marker in content:
-        dialogue = "[Mickael] Une réponse existe déjà pour cette étape."
-        print(_paint(YELLOW, dialogue))
-        _write_session_log(log_path, f"DIALOGUE {dialogue}")
-        _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=already_exists")
-        try:
-            correction = input(_paint(CYAN, "Voulez-vous la corriger ? (oui/non) : ")).strip().lower()
-        except EOFError:
-            dialogue = "[Mickael] Aucune confirmation reçue. La réponse existante est conservée."
-            print(_paint(YELLOW, dialogue))
-            _write_session_log(log_path, f"DIALOGUE {dialogue}")
-            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=no_confirmation")
-            return
-        if correction not in {"oui", "o", "yes", "y"}:
-            dialogue = "[Mickael] La réponse existante n'a pas été modifiée."
-            print(_paint(YELLOW, dialogue))
-            _write_session_log(log_path, f"DIALOGUE {dialogue}")
-            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=declined")
-            return
-        try:
-            answer = input(_paint(CYAN, "Nouvelle réponse : ")).strip()
-        except EOFError:
-            dialogue = "[Mickael] Aucune nouvelle réponse reçue. La réponse existante est conservée."
-            print(_paint(YELLOW, dialogue))
-            _write_session_log(log_path, f"DIALOGUE {dialogue}")
-            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=missing")
-            return
-        _write_session_log(log_path, f"INPUT report_correction_stage={stage} value={answer}")
-        if not answer:
-            dialogue = "[Mickael] Réponse vide : la réponse existante est conservée."
-            print(_paint(YELLOW, dialogue))
-            _write_session_log(log_path, f"DIALOGUE {dialogue}")
-            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=empty")
-            return
-        if _looks_like_command(answer):
-            dialogue = "[Mickael] Cette étape attend une note d'enquête, pas une commande. La réponse existante est conservée."
-            print(_paint(YELLOW, dialogue))
-            _write_session_log(log_path, f"DIALOGUE {dialogue}")
-            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=command_rejected")
-            return
-        marker_start = content.find(completed_marker)
-        answer_line_end = content.rfind("\n", 0, marker_start)
-        answer_line_start = content.rfind("\n", 0, answer_line_end) + 1
-        updated = content[:answer_line_start] + answer + content[answer_line_end:]
-        report.write_text(updated)
-        dialogue = f"[Mickael] Réponse de l'étape {stage} corrigée."
-        print(_paint(GREEN, dialogue))
-        _write_session_log(log_path, f"DIALOGUE {dialogue}")
-        _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=updated")
-        return
-    if marker not in content:
-        dialogue = "[Mickael] Cette rubrique de rapport est introuvable. Aucune écriture effectuée."
-        print(_paint(RED, dialogue))
-        _write_session_log(log_path, f"DIALOGUE {dialogue}")
-        _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=missing_marker")
-        return
-    updated = content.replace(marker, f"{answer}\n{completed_marker}", 1)
+    note = f"{note_start_marker}\n{answer}\n{note_end_marker}\n{completed_marker}"
+    updated = content.replace(marker, note, 1)
     if updated == content:
         print(_paint(RED, "[Mickael] Cette réponse existe déjà. Elle n'a pas été écrasée."))
         return
@@ -385,7 +462,7 @@ def _validate_read_command(root: Path, parts: list[str]) -> None:
                 raise ValueError("Option cut invalide.")
             index += 2
             continue
-        if name == "cut" and (arg.startswith("-d") or arg.startswith("-f")):
+        if name == "cut" and arg.startswith(("-d", "-f")):
             option, value = arg[:2], arg[2:]
             if (option == "-d" and len(value) == 1) or (
                 option == "-f" and re.fullmatch(r"[0-9]+(?:-[0-9]*)?(?:,[0-9]+(?:-[0-9]*)?)*", value)
@@ -470,7 +547,6 @@ def _custom(root: Path, line: str) -> bool:
         print(_paint(CYAN, "dossiers/"))
         print(_paint(CYAN, "evidence/"))
         print(_paint(CYAN, "investigation-report.md"))
-        print(_paint(YELLOW, "[Mickael] Les archives sont classées en deux ensembles. Commencez par consulter les six dossiers narratifs, puis confrontez leur récit aux preuves techniques."))
     elif command == ".cat" and len(parts) == 2:
         print(_safe_path(root, parts[1]).read_text())
     elif command == ".find" and len(parts) == 2:
@@ -512,6 +588,17 @@ def run_shell_console(root: Path) -> int:
         _write_session_log(log_path, f"INPUT command={line}")
         if line.lower() == "help":
             line = ".help"
+        if line.lower().startswith(".correct"):
+            parts = line.split()
+            if (
+                len(parts) != 2
+                or not parts[1].isdecimal()
+                or not 1 <= int(parts[1]) <= len(REPORT_STAGES)
+            ):
+                print(_paint(YELLOW, "Utilisation : .correct <étape de 1 à 6>"))
+            else:
+                _record_stage_answer(root, int(parts[1]), log_path, correction=True)
+            continue
         if line.startswith("."):
             custom_output = io.StringIO()
             try:
@@ -523,14 +610,16 @@ def run_shell_console(root: Path) -> int:
                     _write_session_block(log_path, "OUTPUT", rendered_output)
                 if not should_continue:
                     break
+                if line.split(maxsplit=1)[0].lower() == ".files":
+                    _narrate(log_path, "Les archives sont classées en deux ensembles. Commencez par les six dossiers narratifs, puis confrontez leurs récits aux preuves techniques.")
                 if line.split(maxsplit=1)[0].lower() == ".cat" and len(line.split()) == 2:
                     observed, discovered, commands = _result_evidence(root, "cat " + shlex.quote(line.split(maxsplit=1)[1]), rendered_output, "")
                     dialogue = _file_dialogue(observed, reacted_files)
                     if dialogue:
-                        print(_paint(YELLOW, f"[Mickael] {dialogue}"))
+                        _narrate(log_path, dialogue)
                     progress_step, progress = _progress_reaction(observed, commands, progress_step, consulted, used_commands)
                     if progress:
-                        print(_paint(YELLOW, f"[Mickael] {progress}"))
+                        _narrate(log_path, progress, GREEN)
                         _record_stage_answer(root, progress_step, log_path)
                         used_commands.clear()
             except (OSError, ValueError) as error:
@@ -547,25 +636,19 @@ def run_shell_console(root: Path) -> int:
                 print(error, end="")
                 _write_session_block(log_path, "OUTPUT_ERROR", error)
                 if "No such file or directory" in error:
-                    print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
+                    _narrate(log_path, "Ce chemin n'existe pas. Retrouvez son nom exact dans .files ou avec ls.")
             observed, discovered, commands = _result_evidence(root, line, output, error)
             file_dialogue = _file_dialogue(observed, reacted_files)
             if file_dialogue:
-                dialogue = f"[Mickael] {file_dialogue}"
-                print(_paint(YELLOW, dialogue))
-                _write_session_log(log_path, f"DIALOGUE {dialogue}")
+                _narrate(log_path, file_dialogue)
             interlude = _interlude_reaction(discovered, progress_step, consulted)
             if interlude:
-                dialogue = f"[Mickael] {interlude}"
-                print(_paint(YELLOW, dialogue))
-                _write_session_log(log_path, f"DIALOGUE {dialogue}")
+                _narrate(log_path, interlude)
             progress_step, progress = _progress_reaction(
                 observed, commands, progress_step, consulted, used_commands
             )
             if progress:
-                dialogue = f"[Mickael] {progress}"
-                print(_paint(YELLOW, dialogue))
-                _write_session_log(log_path, f"DIALOGUE {dialogue}")
+                _narrate(log_path, progress, GREEN)
                 _record_stage_answer(root, progress_step, log_path)
                 used_commands.clear()
             elif observed:
