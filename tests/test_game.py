@@ -1,7 +1,7 @@
 """Tests for the Shell Mystery startup and answer validation."""
 
+import re
 import shutil
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -20,8 +20,55 @@ from game.investigation_shell import (
     _run,
     run_shell_console,
 )
+from game.report_validation import validate_report
 
 ROOT = Path(__file__).parents[1]
+
+
+def complete_report() -> str:
+    stages = "\n".join(
+        f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->" for stage in range(1, 7)
+    )
+    return f"""# Rapport de test synthétique
+{stages}
+
+## Chronologie
+| Heure | Fait | Source | Certitude |
+| --- | --- | --- | --- |
+| 09:00 | Un contrôle de test est terminé avant l'incident simulé. | controle-test.txt | confirmée |
+| 09:05 | Une opération de test apparaît dans le journal de simulation. | operation-test.log | probable |
+| 09:10 | Un second contrôle confirme le nouvel état du fichier. | etat-test.txt | confirmée |
+
+## Accès et personnes
+| Élément | Observation | Source |
+| --- | --- | --- |
+| session S-TEST | Une session de test est associée au terminal T-TEST. | sessions-test.log |
+| credential C-TEST | Le registre de test distingue son propriétaire de son utilisateur. | acces-test.txt |
+
+## Fausses pistes écartées
+| Piste écartée | Raison de l'exclusion | Source |
+| --- | --- | --- |
+| Opération préparatoire | Elle ne suffit pas à expliquer l'état observé après l'incident. | journal-test.log |
+
+## Preuves retenues
+| Famille de preuve | Source consultée | Ce qu'elle établit |
+| --- | --- | --- |
+| Identités | membres-test.txt | La correspondance entre une personne et un accès de test. |
+| Journaux | commandes-test.log | La séquence d'actions de la session de test. |
+| Dépôt | branches-test.txt | La chronologie des changements du dépôt de test. |
+
+## Analyse de l'incident
+Action qui explique la disparition : une opération de test produit l'état manquant.
+Session et terminal concernés : la session S-TEST est ouverte sur le terminal T-TEST.
+Credential utilisée et son propriétaire : la credential C-TEST appartient à la personne A.
+Acteur au terminal : la personne B réalise l'opération depuis la session observée.
+Lien entre propriétaire, utilisateur et acteur : le registre, la session et les journaux décrivent trois rôles qu'il faut recouper.
+
+## Conclusion
+Responsable : personne B
+Certitude : élevée
+Justification : la chronologie et les trois familles de traces indépendantes concordent sur l'action et les rôles impliqués.
+"""
 
 class GameStartupTests(unittest.TestCase):
     def test_custom_find_cannot_list_outside_project(self):
@@ -64,16 +111,7 @@ class GameStartupTests(unittest.TestCase):
             output, error = _run(root, "grep m- members.txt | cut -d'|' -f1")
             self.assertEqual((output, error), ("m-01\n", ""))
 
-    def test_correct_names_require_completed_report(self):
-        with tempfile.TemporaryDirectory() as directory:
-            report = Path(directory) / "investigation-report.md"
-            report.write_text("# Rapport vierge\n", encoding="utf-8")
-            with patch.object(main, "ROOT", Path(directory)), patch.object(
-                sys, "argv", ["main.py", "--answer", "ANTHONY|KEVIN"]
-            ):
-                self.assertEqual(main.main(), 1)
-
-    def test_correct_names_are_accepted_after_all_six_stages(self):
+    def test_six_stage_markers_alone_do_not_validate_the_report(self):
         with tempfile.TemporaryDirectory() as directory:
             report = Path(directory) / "investigation-report.md"
             report.write_text(
@@ -83,10 +121,153 @@ class GameStartupTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            output = StringIO()
             with patch.object(main, "ROOT", Path(directory)), patch.object(
-                sys, "argv", ["main.py", "--answer", "ANTHONY|KEVIN"]
-            ):
+                sys, "argv", ["main.py", "--answer", "synthetic|proof"]
+            ), patch.object(main, "validate") as answer_validator, redirect_stdout(output):
+                self.assertEqual(main.main(), 1)
+            answer_validator.assert_not_called()
+            self.assertIn("Chronologie", output.getvalue())
+
+    def test_unedited_report_template_is_rejected(self):
+        report = (ROOT / "investigation-report.md").read_text(encoding="utf-8")
+        report += "\n" + "\n".join(
+            f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->"
+            for stage in range(1, 7)
+        )
+        issues = validate_report(report)
+        self.assertTrue(any("Chronologie" in issue for issue in issues))
+        self.assertTrue(any("Preuves retenues" in issue for issue in issues))
+        self.assertTrue(any("justification argumentée" in issue for issue in issues))
+
+    def test_table_headers_do_not_count_as_report_entries(self):
+        report = complete_report()
+        report = report.replace(
+            "| Élément | Observation | Source |\n| --- | --- | --- |\n"
+            "| session S-TEST | Une session de test est associée au terminal T-TEST. | sessions-test.log |\n"
+            "| credential C-TEST | Le registre de test distingue son propriétaire de son utilisateur. | acces-test.txt |",
+            "| Sujet | Description | Fichier |\n| --- | --- | --- |",
+        ).replace(
+            "| Piste écartée | Raison de l'exclusion | Source |\n| --- | --- | --- |\n"
+            "| Opération préparatoire | Elle ne suffit pas à expliquer l'état observé après l'incident. | journal-test.log |",
+            "| Sujet | Cause | Document |\n| --- | --- | --- |",
+        )
+        issues = validate_report(report)
+        self.assertTrue(any("Accès et personnes" in issue for issue in issues))
+        self.assertTrue(any("Fausses pistes" in issue for issue in issues))
+
+    def test_complete_report_is_accepted_without_fixed_answer_wording(self):
+        self.assertEqual(validate_report(complete_report()), [])
+
+    def test_complete_prose_report_is_accepted_with_distinct_evidence_families(self):
+        report = complete_report()
+        report = re.sub(
+            r"## Chronologie\n.*?(?=\n## Accès et personnes)",
+            "## Chronologie\n"
+            "À 09:00, controle-test.txt confirme le contrôle terminé avant l'incident. Certitude : confirmée.\n"
+            "À 09:05, operation-test.log rapporte l'opération observée. Certitude : probable.\n"
+            "À 09:10, etat-test.txt confirme le nouvel état du fichier. Certitude : confirmée.\n",
+            report,
+            flags=re.DOTALL,
+        )
+        report = re.sub(
+            r"## Accès et personnes\n.*?(?=\n## Fausses pistes écartées)",
+            "## Accès et personnes\n"
+            "- La session S-TEST est associée au terminal T-TEST, d'après sessions-test.log.\n"
+            "- Le registre acces-test.txt distingue le propriétaire de l'utilisateur.\n",
+            report,
+            flags=re.DOTALL,
+        )
+        report = re.sub(
+            r"## Fausses pistes écartées\n.*?(?=\n## Preuves retenues)",
+            "## Fausses pistes écartées\n"
+            "- La piste préparatoire est écartée, car journal-test.log ne montre pas qu'elle a modifié le résultat.\n",
+            report,
+            flags=re.DOTALL,
+        )
+        report = re.sub(
+            r"## Preuves retenues\n.*?(?=\n## Analyse de l'incident)",
+            "## Preuves retenues\n"
+            "- Identités : membres-test.txt relie une personne à un accès de test.\n"
+            "- Journaux : commandes-test.log établit la séquence de la session.\n"
+            "- Dépôt : branches-test.txt situe les changements du dépôt.\n",
+            report,
+            flags=re.DOTALL,
+        )
+        self.assertEqual(validate_report(report), [])
+
+    def test_mixed_table_and_prose_entries_are_counted_together(self):
+        report = complete_report().replace(
+            "| 09:10 | Un second contrôle confirme le nouvel état du fichier. | etat-test.txt | confirmée |",
+            "À 09:10, etat-test.txt confirme le nouvel état; certitude confirmée.",
+        ).replace(
+            "| Dépôt | branches-test.txt | La chronologie des changements du dépôt de test. |",
+            "- Dépôt : branches-test.txt situe les changements du dépôt de test.",
+        )
+        self.assertEqual(validate_report(report), [])
+
+    def test_free_text_chronology_requires_times_sources_and_certainty(self):
+        report = re.sub(
+            r"## Chronologie\n.*?(?=\n## Accès et personnes)",
+            "## Chronologie\n"
+            "À 09:00, le contrôle de test se termine; niveau de certitude confirmé.\n"
+            "À 09:05, operation-test.log rapporte l'opération; certitude probable.\n"
+            "À 09:10, etat-test.txt confirme le nouvel état; certitude confirmée.\n",
+            complete_report(),
+            flags=re.DOTALL,
+        )
+        self.assertTrue(any("Chronologie" in issue for issue in validate_report(report)))
+
+    def test_false_lead_requires_a_reason_and_source(self):
+        report = complete_report().replace(
+            "Elle ne suffit pas à expliquer l'état observé après l'incident. | journal-test.log",
+            "Elle est évoquée par un participant. | inconnu",
+        )
+        self.assertTrue(any("Fausses pistes" in issue for issue in validate_report(report)))
+
+    def test_duplicate_stage_marker_does_not_count_as_complete(self):
+        report = complete_report() + "\n<!-- NORTHSTAR_STAGE_1_COMPLETED -->"
+        self.assertTrue(any("étapes de progression" in issue for issue in validate_report(report)))
+
+    def test_repeated_evidence_family_does_not_count_as_three_independent_families(self):
+        report = complete_report().replace(
+            "| Journaux | commandes-test.log",
+            "| Identités | commandes-test.log",
+        ).replace(
+            "| Dépôt | branches-test.txt",
+            "| Identités | branches-test.txt",
+        )
+        self.assertTrue(any("trois familles distinctes" in issue for issue in validate_report(report)))
+
+    def test_short_conclusion_fields_are_rejected(self):
+        report = complete_report().replace(
+            "Justification : la chronologie et les trois familles de traces indépendantes concordent sur l'action et les rôles impliqués.",
+            "Justification : oui.",
+        )
+        self.assertTrue(any("justification argumentée" in issue for issue in validate_report(report)))
+
+    def test_bracketed_template_placeholder_is_not_a_conclusion_value(self):
+        report = complete_report().replace(
+            "Responsable : personne B", "Responsable : [À compléter]"
+        )
+        self.assertTrue(any("Responsable" in issue for issue in validate_report(report)))
+
+    def test_complete_report_is_forwarded_to_answer_validator(self):
+        with tempfile.TemporaryDirectory() as directory:
+            (Path(directory) / "investigation-report.md").write_text(
+                complete_report(), encoding="utf-8"
+            )
+            with patch.object(main, "ROOT", Path(directory)), patch.object(
+                sys, "argv", ["main.py", "--answer", "synthetic|proof"]
+            ), patch.object(main, "validate", return_value=0) as answer_validator:
                 self.assertEqual(main.main(), 0)
+            answer_validator.assert_called_once_with("synthetic|proof")
+
+    def test_test_sources_do_not_embed_an_uppercase_answer_pair(self):
+        answer_pattern = re.compile(r"\b[A-Z]{3,}\|[A-Z]{3,}\b")
+        for source in (ROOT / "tests").glob("*.py"):
+            with self.subTest(source=source.name):
+                self.assertIsNone(answer_pattern.search(source.read_text(encoding="utf-8")))
 
     def test_first_stage_waits_for_all_six_dossiers_and_find(self):
         required = set(PROGRESS_STEPS[0][0])
@@ -412,14 +593,16 @@ class GameStartupTests(unittest.TestCase):
             self.assertNotIn("unknown primary or operator", output.getvalue())
 
     def test_wrong_answer_is_rejected(self):
-        result = subprocess.run(
-            [sys.executable, "main.py", "--answer", "WRONG|ACTOR"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        self.assertEqual(result.returncode, 1)
+        with tempfile.TemporaryDirectory() as directory:
+            (Path(directory) / "investigation-report.md").write_text(
+                complete_report(), encoding="utf-8"
+            )
+            output = StringIO()
+            with patch.object(main, "ROOT", Path(directory)), patch.object(
+                sys, "argv", ["main.py", "--answer", "not-an-owner|not-an-actor"]
+            ), redirect_stdout(output):
+                self.assertEqual(main.main(), 1)
+            self.assertIn("preuve est incomplète", output.getvalue())
 
 
 if __name__ == "__main__":

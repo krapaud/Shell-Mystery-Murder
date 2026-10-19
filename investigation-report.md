@@ -25,23 +25,41 @@
 | Heure | Fait | Source | Certitude |
 | --- | --- | --- | --- |
 | | | | |
+| | | | |
+| | | | |
 
 ## Accès et personnes
 
 | Élément | Observation | Source |
 | --- | --- | --- |
 | | | |
+| | | |
 
 ## Fausses pistes écartées
 
-1.
-2.
+| Piste écartée | Raison de l'exclusion | Source |
+| --- | --- | --- |
+| | | |
 
 ## Preuves retenues
 
-1.
-2.
-3.
+| Famille de preuve | Source consultée | Ce qu'elle établit |
+| --- | --- | --- |
+| | | |
+| | | |
+| | | |
+
+## Analyse de l'incident
+
+Action qui explique la disparition :
+
+Session et terminal concernés :
+
+Credential utilisée et son propriétaire :
+
+Acteur au terminal :
+
+Lien entre propriétaire, utilisateur et acteur :
 
 ## Conclusion
 
