@@ -6,8 +6,8 @@ forcément celle enregistrée par le terminal. Son témoignage ne donne donc pas
 à lui seul l'heure de disparition.
 
 Retrouvez l'heure exacte du contrôle dans les traces, puis comparez-la avec la
-première lecture qui échoue. Entre ces deux moments, plusieurs personnes ont
-encore ouvert une session.
+première lecture qui échoue. Entre ces deux moments, plusieurs sessions ont
+été actives.
 
 Question : quel est le dernier fait certain avant l'incident, quel est le
 premier fait certain après l'incident, et quelle durée sépare les deux ?

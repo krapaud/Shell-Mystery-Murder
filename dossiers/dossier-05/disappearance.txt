@@ -1,8 +1,8 @@
 DOSSIER 05 : L'INCIDENT
 
-À 15 h 42, l'archive n'est plus disponible. Une branche hotfix/release est
-apparue pendant la même fenêtre et a été poussée avant que l'équipe ne constate
-la disparition.
+La première lecture infructueuse survient après 15 h 42. Une branche
+hotfix/release est apparue pendant la même fenêtre et a été poussée avant que
+l'incident ne soit déclaré.
 
 Les traces techniques utilisent trois langages différents : une cible de
 fichier, un identifiant de session et une variable d'environnement. Certaines

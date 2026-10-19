@@ -1,4 +1,6 @@
+2026-10-19 15:38:22 +0200 HEAD@{2}: commit: update release notes; author=Anthony R. (m-02)
+2026-10-19 15:39:18 +0200 HEAD@{1}: commit: chmod package script; author=Lisa P. (m-04)
 2026-10-19 15:40:38 +0200 HEAD@{0}: checkout: moving from main to hotfix/release
-2026-10-19 15:41:22 +0200 HEAD@{1}: commit: update release notes; author=Anthony R. (m-02)
-2026-10-19 15:42:44 +0200 HEAD@{2}: push: hotfix/release; workstation=poste-04
-2026-10-19 15:45:02 +0200 HEAD@{3}: commit: verify release checklist; author=Lydie S. (m-05)
+2026-10-19 15:42:44 +0200 remote: push hotfix/release; workstation=poste-04
+
+Note de reprise [2/3] : op-417 ; sa correspondance se trouve dans

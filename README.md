@@ -36,6 +36,8 @@ mais l'enquête est réalisable seul.
 - Notez les heures, les identifiants, les terminaux et les cibles exactes.
 - Ne concluez pas à partir d'un seul nom ou d'une seule ligne de log.
 - Distinguez toujours un préparatif, une action réussie et un effet constaté.
+- Si plusieurs extraits portent le même titre, rassemblez-les dans leur ordre
+  avant d'interpréter les traces qu'ils désignent.
 - Conservez vos observations pour rédiger le rapport final.
 
 ## Lancer l'enquête
@@ -80,12 +82,10 @@ Commencez par découvrir les fichiers disponibles, puis lisez les six dossiers
 de `dossiers/`. Ils présentent le contexte, les rôles et les questions à
 résoudre. Ils ne constituent pas la preuve finale.
 
-Ne vous contentez pas d'afficher les fichiers un par un. La console suit aussi
-votre méthode de recherche : découvrez les archives avec `find`, filtrez les
-identifiants et les horaires avec `grep`, isolez des colonnes avec `cut`, puis
-triez les événements avec `sort`. Une étape n'est validée qu'après lecture de
-toutes ses sources et utilisation des commandes de recherche utiles à cette
-partie de l'enquête.
+Découvrez les archives avec `find`, filtrez les identifiants et les horaires
+avec `grep`, isolez des colonnes avec `cut`, puis triez les événements avec
+`sort`. Les résultats de ces recherches servent à assembler les indices et à
+vérifier vos hypothèses. La console réagit aux preuves que vous consultez.
 
 ### 2. Construire votre tableau d'identités
 
@@ -122,8 +122,10 @@ Quittez la console avec :
 .exit
 ```
 
-Rédigez votre rapport dans `investigation-report.md` ou dans un document
-séparé. Il doit contenir :
+Complétez les six étapes de `investigation-report.md` dans la console, puis
+rédigez-y votre conclusion. La validation finale exige les six étapes
+complétées. Vous pouvez garder des notes complémentaires à part. Le rapport
+doit contenir :
 
 - une chronologie argumentée ;
 - l'action qui explique la disparition ;

@@ -1,8 +1,8 @@
-audit_id|timestamp|terminal|command_family|target|status
-cmd-101|2026-10-19 15:33:41|poste-01|integrity-check|release/release-candidate.tar.gz|completed
-cmd-102|2026-10-19 15:39:02|poste-03|permission-change|scripts/package.sh|completed
-cmd-103|2026-10-19 15:40:11|poste-04|environment-change|RELEASE_DIR|completed
-cmd-104|2026-10-19 15:40:38|poste-04|branch-operation|hotfix/release|completed
-cmd-105|2026-10-19 15:42:16|poste-04|filesystem-operation|release/release-candidate.tar.gz|completed
-cmd-106|2026-10-19 15:42:44|poste-04|remote-operation|hotfix/release|completed
-cmd-107|2026-10-19 15:43:01|poste-05|read-operation|release/release-candidate.tar.gz|failed
+audit_id|timestamp|terminal|command_family|target|status|access_ref
+cmd-101|2026-10-19 15:33:41|poste-01|integrity-check|release/release-candidate.tar.gz|completed|-
+cmd-102|2026-10-19 15:39:02|poste-03|permission-change|scripts/package.sh|completed|-
+cmd-103|2026-10-19 15:40:11|poste-04|environment-change|RELEASE_DIR|completed|-
+cmd-104|2026-10-19 15:40:38|poste-04|branch-operation|hotfix/release|completed|-
+cmd-105|2026-10-19 15:42:16|poste-04|filesystem-operation|release/release-candidate.tar.gz|completed|op-417
+cmd-106|2026-10-19 15:42:44|poste-04|remote-operation|hotfix/release|completed|-
+cmd-107|2026-10-19 15:43:01|poste-05|read-operation|release/release-candidate.tar.gz|failed|-

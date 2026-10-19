@@ -2,9 +2,9 @@ path=/srv/northstar/release/release-candidate.tar.gz
 owner=Anthony R. (m-02)
 mode=-rw-r-----
 group=release
-note=The owner is the credential owner, not necessarily the person at the keyboard.
+note=La fiche d'attribution décrit le titulaire du droit, pas son usage à une heure donnée.
 
-path=/srv/northstar/package.sh
+path=/srv/northstar/scripts/package.sh
 owner=Lisa P. (m-04)
 mode=-rwxr-x---
 group=release

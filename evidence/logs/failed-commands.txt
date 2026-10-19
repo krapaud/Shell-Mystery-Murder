@@ -1,4 +1,4 @@
 timestamp|terminal|command|result|context
-2026-10-19 15:37:30|poste-02|git show hotfix/release:release/release-candidate.tar.gz|not-found|Anthony checks the branch before the review.
-2026-10-19 15:39:18|poste-03|chmod 640 /srv/northstar/package.sh|success|Lisa adjusts the packaging script permissions.
-2026-10-19 15:43:01|poste-05|cat /srv/northstar/release/release-candidate.tar.gz|not-found|Lydie checks the archive after the incident.
+2026-10-19 15:37:30|poste-02|git show main:release/release-candidate.tar.gz|not-found|Consultation de la copie Git; l'archive publiée est hors dépôt.
+2026-10-19 15:39:02|poste-03|chmod 640 /srv/northstar/scripts/package.sh|success|Changement de droits sur le script de paquetage.
+2026-10-19 15:43:01|poste-05|cat /srv/northstar/release/release-candidate.tar.gz|not-found|Première lecture infructueuse de la copie publiée.
