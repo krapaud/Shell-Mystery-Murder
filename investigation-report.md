@@ -3,7 +3,8 @@
 ## Journal de progression
 
 ### Étape 1 : Inventaire des dossiers
-<!-- NORTHSTAR_STAGE_1 -->
+Les fichiet txt
+<!-- NORTHSTAR_STAGE_1_COMPLETED -->
 
 ### Étape 2 : Contexte de l'affaire
 <!-- NORTHSTAR_STAGE_2 -->
