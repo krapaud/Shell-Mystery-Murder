@@ -80,6 +80,13 @@ Commencez par découvrir les fichiers disponibles, puis lisez les six dossiers
 de `dossiers/`. Ils présentent le contexte, les rôles et les questions à
 résoudre. Ils ne constituent pas la preuve finale.
 
+Ne vous contentez pas d'afficher les fichiers un par un. La console suit aussi
+votre méthode de recherche : découvrez les archives avec `find`, filtrez les
+identifiants et les horaires avec `grep`, isolez des colonnes avec `cut`, puis
+triez les événements avec `sort`. Une étape n'est validée qu'après lecture de
+toutes ses sources et utilisation des commandes de recherche utiles à cette
+partie de l'enquête.
+
 ### 2. Construire votre tableau d'identités
 
 Dans `evidence/identity/`, recherchez les correspondances entre les membres,

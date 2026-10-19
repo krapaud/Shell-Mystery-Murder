@@ -75,6 +75,18 @@ PROGRESS_STEPS = (
     (("evidence/git/branch-log", "evidence/git/reflog"), "Git confirme l'ordre des opérations. Utilisez-le pour vérifier la chronologie, pas pour conclure seul."),
 )
 
+# Chaque étape demande une vraie opération de recherche Shell. Les fichiers
+# restent lisibles avec ``cat``, mais la progression récompense aussi la
+# découverte, le filtrage, l'extraction et le tri des preuves.
+STEP_COMMANDS = (
+    {"find"},
+    {"grep", "cut"},
+    {"grep"},
+    {"grep", "sort"},
+    {"grep", "cut"},
+    {"sort"},
+)
+
 INTERLUDE_DIALOGUES = {
     (0, "find dossiers"): "Voici les dossiers de l'affaire. Parcourez-les pour comprendre ce qui devait être protégé avant de suivre les traces.",
     (6, "find evidence"): "Le contexte est posé. Les preuves techniques vont maintenant permettre de vérifier ce que les dossiers racontent.",
@@ -116,13 +128,21 @@ REPORT_STAGES = (
 )
 
 
-def _progress_reaction(command: str, step: int, consulted: set[str]) -> tuple[int, Optional[str]]:
+def _progress_reaction(
+    command: str,
+    step: int,
+    consulted: set[str],
+    used_commands: set[str],
+) -> tuple[int, Optional[str]]:
     lowered = command.lower()
+    used_commands.update(
+        token for token in ALLOWED if any(part == token for part in lowered.replace("|", " ").split())
+    )
     consulted.update(marker for markers, _ in PROGRESS_STEPS for marker in markers if marker in lowered)
     if step >= len(PROGRESS_STEPS):
         return step, None
     required, reaction = PROGRESS_STEPS[step]
-    if all(marker in consulted for marker in required):
+    if all(marker in consulted for marker in required) and STEP_COMMANDS[step].issubset(used_commands):
         return step + 1, reaction
     return step, None
 
@@ -352,6 +372,7 @@ def run_shell_console(root: Path) -> int:
     progress_step = 0
     consulted = set()
     reacted_files = set()
+    used_commands = set()
     if readline is not None:
         readline.parse_and_bind("set editing-mode emacs")
     log_dir = root / ".student-data"
@@ -411,12 +432,15 @@ def run_shell_console(root: Path) -> int:
                 dialogue = f"[Mickael] {interlude}"
                 print(_paint(YELLOW, dialogue))
                 _write_session_log(log_path, f"DIALOGUE {dialogue}")
-            progress_step, progress = _progress_reaction(line, progress_step, consulted)
+            progress_step, progress = _progress_reaction(
+                line, progress_step, consulted, used_commands
+            )
             if progress:
                 dialogue = f"[Mickael] {progress}"
                 print(_paint(YELLOW, dialogue))
                 _write_session_log(log_path, f"DIALOGUE {dialogue}")
                 _record_stage_answer(root, progress_step, log_path)
+                used_commands.clear()
             elif any(marker in line.lower() for markers, _ in PROGRESS_STEPS[progress_step:] for marker in markers):
                 _write_session_log(log_path, "PROGRESS pending_required_evidence")
         except (OSError, ValueError) as error:
