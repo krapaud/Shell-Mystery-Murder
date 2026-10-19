@@ -57,6 +57,32 @@ def _narrative_reaction(command: str) -> Optional[str]:
     return None
 
 
+PROGRESS_STEPS = (
+    ("find dossiers", "Les dossiers sont localisés. Commencez par établir le contexte avant de suivre les traces techniques."),
+    ("dossier-01", "Le cadre de l'affaire est posé. Notez les rôles, mais gardez vos hypothèses ouvertes."),
+    ("dossier-02", "Les accès sont identifiés. La suite consiste à relier les identifiants sans confondre droit et utilisateur."),
+    ("dossier-03", "Vous avez le point de référence de l'intégrité. Il servira à fixer le début de la chronologie."),
+    ("dossier-04", "Les premières pistes humaines apparaissent. Vérifiez maintenant les déclarations dans les traces."),
+    ("dossier-05", "La fenêtre de disparition est définie. Il faut maintenant relier l'action, la session et le terminal."),
+    ("dossier-06", "Les questions du rapport sont posées. Passez aux preuves techniques et construisez votre propre chronologie."),
+    ("evidence/identity", "Les identités sont séparées des actions. Notez chaque correspondance avant de lire les événements."),
+    ("evidence/incident", "Le constat est établi. Il décrit le résultat, pas encore l'auteur."),
+    ("evidence/logs", "La chronologie technique se précise. Comparez les succès, les actions et le premier échec."),
+    ("evidence/team/interviews", "Les témoignages sont confrontés aux traces. Une déclaration ne vaut que si les horaires la confirment."),
+    ("evidence/git", "Git confirme l'ordre des opérations. Utilisez-le pour vérifier la chronologie, pas pour conclure seul."),
+)
+
+
+def _progress_reaction(command: str, step: int) -> tuple[int, Optional[str]]:
+    lowered = command.lower()
+    if step >= len(PROGRESS_STEPS):
+        return step, None
+    marker, reaction = PROGRESS_STEPS[step]
+    if marker in lowered:
+        return step + 1, reaction
+    return step, None
+
+
 def _safe_path(root: Path, value: str) -> Path:
     candidate = (root / value).resolve()
     if root.resolve() not in candidate.parents and candidate != root.resolve():
@@ -143,6 +169,7 @@ def _custom(root: Path, line: str) -> bool:
 
 
 def run_shell_console(root: Path) -> int:
+    progress_step = 0
     print(_line())
     print(_paint(GREEN, "Console d'enquête prête. Northstar vous attend."))
     print(_paint(YELLOW, "Tapez .help pour afficher les commandes disponibles."))
@@ -173,9 +200,9 @@ def run_shell_console(root: Path) -> int:
                 print(error, end="")
                 if "No such file or directory" in error:
                     print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
-            reaction = _narrative_reaction(line)
-            if reaction:
-                print(_paint(YELLOW, f"[Mickael] {reaction}"))
+            progress_step, progress = _progress_reaction(line, progress_step)
+            if progress:
+                print(_paint(YELLOW, f"[Mickael] {progress}"))
         except (OSError, ValueError) as error:
             print(_paint(RED, f"Commande refusée : {error}"))
     return 0
