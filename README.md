@@ -1,5 +1,7 @@
 # Northstar : l'archive disparue
 
+![Affiche Northstar : The Last commit](assets/northstar-mystery-faceoff.png)
+
 > « L'archive de livraison a disparu avant la présentation. Les fichiers
 > existent encore, mais ils ne racontent pas tous la même partie de l'histoire. »
 
