@@ -1,6 +1,8 @@
 DOSSIER 04 : LES TÉMOINS
 
-Les déclarations ne racontent pas exactement la même histoire.
+Les déclarations ne racontent pas exactement la même histoire. Certaines sont
+exactes sur l'objectif mais imprécises sur l'heure ou le fichier réellement
+touché.
 
 Lisa dit avoir uniquement sécurisé le script de paquetage. Anthony dit avoir
 contrôlé la branche avant la revue. Lydie dit avoir consulté l'archive après le
@@ -8,6 +10,8 @@ contrôle d'intégrité. Kevin dit avoir créé une branche de secours pour évi
 de bloquer la présentation.
 
 Leurs déclarations sont conservées dans `evidence/team/interviews.txt`.
-Vérifiez chaque déclaration par l'heure, le terminal et la cible de l'action.
+Vérifiez chaque déclaration par l'heure, le terminal, la session et la cible de
+l'action. Une même credential peut apparaître dans plusieurs sessions : ne
+transformez pas ce partage en accusation.
 Une action inhabituelle n'est pas forcément la suppression recherchée, et une
 déclaration exacte sur un point ne valide pas tout le reste.

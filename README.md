@@ -35,6 +35,7 @@ mais l'enquête est réalisable seul.
 - Vérifiez chaque hypothèse avec plusieurs traces indépendantes.
 - Notez les heures, les identifiants, les terminaux et les cibles exactes.
 - Ne concluez pas à partir d'un seul nom ou d'une seule ligne de log.
+- Distinguez toujours un préparatif, une action réussie et un effet constaté.
 - Conservez vos observations pour rédiger le rapport final.
 
 ## Lancer l'enquête
@@ -90,9 +91,10 @@ credential de la personne qui ouvre une session.
 ### 3. Construire la chronologie
 
 Dans `evidence/incident/` et `evidence/logs/`, comparez les événements dans
-l'ordre des heures. Cherchez le dernier état certain de l'archive, les actions
-qui précèdent sa disparition et la première vérification qui constate son
-absence.
+l'ordre des heures. Cherchez le dernier état certain de l'archive, les
+préparatifs, l'action qui produit sa disparition et la première vérification
+qui constate son absence. Calculez la fenêtre temporelle au lieu de recopier
+uniquement les heures.
 
 ### 4. Comparer les déclarations et les traces
 
@@ -123,6 +125,8 @@ séparé. Il doit contenir :
 - l'acteur identifié ;
 - au moins trois familles de preuves indépendantes ;
 - les fausses pistes écartées et la raison de leur exclusion.
+- la différence entre propriétaire du droit, utilisateur de la session et
+  personne qui a réalisé l'action.
 
 ## Validation finale
 

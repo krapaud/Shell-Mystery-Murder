@@ -9,6 +9,8 @@ Le rapport final doit répondre à ces questions dans cet ordre :
 5. Quel compte ou credential a été utilisé, et qui en était le propriétaire ?
 6. Quelles déclarations et quelles actions écartent les autres pistes ?
 
-Votre conclusion doit citer au moins trois familles de preuves et signaler une
-contradiction ou une fausse piste résolue. Une simple correspondance de nom,
-de terminal ou de credential ne suffit pas.
+Votre conclusion doit citer au moins trois familles de preuves, calculer la
+fenêtre entre le dernier état certain et le premier constat d'absence, et
+signaler une contradiction ou une fausse piste résolue. Expliquez aussi
+pourquoi le propriétaire de la credential n'est pas automatiquement l'acteur.
+Une simple correspondance de nom, de terminal ou de credential ne suffit pas.

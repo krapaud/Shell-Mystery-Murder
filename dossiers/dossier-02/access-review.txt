@@ -1,11 +1,13 @@
 DOSSIER 02 : LES DROITS
 
 La revue des accès indique que plusieurs sessions ont utilisé des credentials
-différentes pendant la fenêtre de livraison. Certaines personnes ont donc pu
-lire l'archive sans pouvoir la supprimer.
+différentes pendant la fenêtre de livraison. Certaines personnes ont pu lire
+l'archive, d'autres ont pu modifier des fichiers de préparation, et une
+credential de service apparaît sur plusieurs sessions.
 
 Associez les identifiants de membres, les sessions, les terminaux et les
 credentials. Ne déduisez pas l'acteur à partir du seul propriétaire d'un droit.
 Une session ouverte sur le bon terminal est une piste, pas encore une preuve.
 
-Question : quelles associations sont confirmées par deux fichiers différents ?
+Question : quelles associations sont confirmées par deux fichiers différents,
+et lesquelles ne sont qu'une coïncidence de terminal ou d'horaire ?
