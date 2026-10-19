@@ -110,42 +110,58 @@ def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
     report = root / "investigation-report.md"
     if stage < 1 or stage > len(REPORT_STAGES) or not report.exists():
         return
-    print(_paint(YELLOW, f"[Mickael] Étape {stage} validée. {REPORT_STAGES[stage - 1]}"))
+    dialogue = f"[Mickael] Étape {stage} validée. {REPORT_STAGES[stage - 1]}"
+    print(_paint(YELLOW, dialogue))
+    _write_session_log(log_path, f"DIALOGUE {dialogue}")
     _write_session_log(log_path, f"STAGE_VALIDATED stage={stage}")
     try:
         answer = input(_paint(CYAN, "Votre note : ")).strip()
     except EOFError:
-        print(_paint(YELLOW, "[Mickael] Aucune note saisie. L'étape reste validée, mais le rapport n'est pas complété."))
+        dialogue = "[Mickael] Aucune note saisie. L'étape reste validée, mais le rapport n'est pas complété."
+        print(_paint(YELLOW, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=missing")
         return
     if not answer:
-        print(_paint(YELLOW, "[Mickael] Réponse vide : rien n'a été écrit dans le rapport."))
+        dialogue = "[Mickael] Réponse vide : rien n'a été écrit dans le rapport."
+        print(_paint(YELLOW, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=empty")
         return
     content = report.read_text()
     marker = f"<!-- NORTHSTAR_STAGE_{stage} -->"
     completed_marker = f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->"
     if completed_marker in content:
-        print(_paint(YELLOW, "[Mickael] Une réponse existe déjà pour cette étape."))
+        dialogue = "[Mickael] Une réponse existe déjà pour cette étape."
+        print(_paint(YELLOW, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=already_exists")
         try:
             correction = input(_paint(CYAN, "Voulez-vous la corriger ? (oui/non) : ")).strip().lower()
         except EOFError:
-            print(_paint(YELLOW, "[Mickael] Aucune confirmation reçue. La réponse existante est conservée."))
+            dialogue = "[Mickael] Aucune confirmation reçue. La réponse existante est conservée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
             _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=no_confirmation")
             return
         if correction not in {"oui", "o", "yes", "y"}:
-            print(_paint(YELLOW, "[Mickael] La réponse existante n'a pas été modifiée."))
+            dialogue = "[Mickael] La réponse existante n'a pas été modifiée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
             _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=declined")
             return
         try:
             answer = input(_paint(CYAN, "Nouvelle réponse : ")).strip()
         except EOFError:
-            print(_paint(YELLOW, "[Mickael] Aucune nouvelle réponse reçue. La réponse existante est conservée."))
+            dialogue = "[Mickael] Aucune nouvelle réponse reçue. La réponse existante est conservée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
             _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=missing")
             return
         if not answer:
-            print(_paint(YELLOW, "[Mickael] Réponse vide : la réponse existante est conservée."))
+            dialogue = "[Mickael] Réponse vide : la réponse existante est conservée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
             _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=empty")
             return
         marker_start = content.find(completed_marker)
@@ -153,11 +169,15 @@ def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
         answer_line_start = content.rfind("\n", 0, answer_line_end) + 1
         updated = content[:answer_line_start] + answer + content[answer_line_end:]
         report.write_text(updated)
-        print(_paint(GREEN, f"[Mickael] Réponse de l'étape {stage} corrigée."))
+        dialogue = f"[Mickael] Réponse de l'étape {stage} corrigée."
+        print(_paint(GREEN, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=updated")
         return
     if marker not in content:
-        print(_paint(RED, "[Mickael] Cette rubrique de rapport est introuvable. Aucune écriture effectuée."))
+        dialogue = "[Mickael] Cette rubrique de rapport est introuvable. Aucune écriture effectuée."
+        print(_paint(RED, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=missing_marker")
         return
     updated = content.replace(marker, f"{answer}\n{completed_marker}", 1)
@@ -165,7 +185,9 @@ def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
         print(_paint(RED, "[Mickael] Cette réponse existe déjà. Elle n'a pas été écrasée."))
         return
     report.write_text(updated)
-    print(_paint(GREEN, f"[Mickael] Note enregistrée dans l'étape {stage} du rapport."))
+    dialogue = f"[Mickael] Note enregistrée dans l'étape {stage} du rapport."
+    print(_paint(GREEN, dialogue))
+    _write_session_log(log_path, f"DIALOGUE {dialogue}")
     _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=recorded")
 
 
@@ -296,7 +318,9 @@ def run_shell_console(root: Path) -> int:
                     print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
             progress_step, progress = _progress_reaction(line, progress_step, consulted)
             if progress:
-                print(_paint(YELLOW, f"[Mickael] {progress}"))
+                dialogue = f"[Mickael] {progress}"
+                print(_paint(YELLOW, dialogue))
+                _write_session_log(log_path, f"DIALOGUE {dialogue}")
                 _record_stage_answer(root, progress_step, log_path)
             elif any(marker in line.lower() for markers, _ in PROGRESS_STEPS[progress_step:] for marker in markers):
                 _write_session_log(log_path, "PROGRESS pending_required_evidence")
