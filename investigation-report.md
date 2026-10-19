@@ -2,38 +2,23 @@
 
 ## Journal de progression
 
-### Étape 1 : Contexte de l'affaire
+### Étape 1 : Les dossiers de l'affaire
 <!-- NORTHSTAR_STAGE_1 -->
 
-### Étape 2 : Accès et identités
+### Étape 2 : Les identités et les accès
 <!-- NORTHSTAR_STAGE_2 -->
 
-### Étape 3 : Dernier contrôle connu
+### Étape 3 : Le constat d'incident
 <!-- NORTHSTAR_STAGE_3 -->
 
-### Étape 4 : Déclarations et pistes
+### Étape 4 : La chronologie technique
 <!-- NORTHSTAR_STAGE_4 -->
 
-### Étape 5 : Fenêtre de disparition
+### Étape 5 : Les déclarations
 <!-- NORTHSTAR_STAGE_5 -->
 
-### Étape 6 : Questions à résoudre
+### Étape 6 : La confirmation Git
 <!-- NORTHSTAR_STAGE_6 -->
-
-### Étape 7 : Correspondances d'identité
-<!-- NORTHSTAR_STAGE_7 -->
-
-### Étape 8 : Constat d'incident
-<!-- NORTHSTAR_STAGE_8 -->
-
-### Étape 9 : Chronologie technique
-<!-- NORTHSTAR_STAGE_9 -->
-
-### Étape 10 : Témoignages vérifiés
-<!-- NORTHSTAR_STAGE_10 -->
-
-### Étape 11 : Confirmation Git
-<!-- NORTHSTAR_STAGE_11 -->
 
 ## Chronologie
 

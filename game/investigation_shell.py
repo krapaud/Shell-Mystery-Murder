@@ -35,6 +35,7 @@ NARRATIVE_REACTIONS = {
     "reflog.txt": "Le reflog complète la chronologie de la branche et du push.",
 }
 ALLOWED = {"find", "cat", "grep", "cut", "sort", "awk", "head", "tail", "wc", "pwd", "ls"}
+COMMAND_WORDS = ALLOWED | {"help", ".help", ".files", ".cat", ".find", ".grep", ".exit", ".quit"}
 RESET = "\033[0m"
 CYAN = "\033[36m"
 YELLOW = "\033[33m"
@@ -66,16 +67,11 @@ def _narrative_reaction(command: str) -> Optional[str]:
 
 
 PROGRESS_STEPS = (
-    (("dossier-01",), "Le cadre de l'affaire est posé. Notez les rôles, mais gardez vos hypothèses ouvertes."),
-    (("dossier-02",), "Les accès sont identifiés. La suite consiste à relier les identifiants sans confondre droit et utilisateur."),
-    (("dossier-03",), "Vous avez le point de référence de l'intégrité. Il servira à fixer le début de la chronologie."),
-    (("dossier-04",), "Les premières pistes humaines apparaissent. Vérifiez maintenant les déclarations dans les traces."),
-    (("dossier-05",), "La fenêtre de disparition est définie. Il faut maintenant relier l'action, la session et le terminal."),
-    (("dossier-06",), "Les questions du rapport sont posées. Passez aux preuves techniques et construisez votre propre chronologie."),
+    (("dossier-01", "dossier-02", "dossier-03", "dossier-04", "dossier-05", "dossier-06"), "Les six dossiers sont parcourus. Le contexte est posé ; vous pouvez maintenant confronter le récit aux preuves techniques."),
     (("evidence/identity/members", "evidence/identity/credentials", "evidence/identity/sessions"), "Les identités sont séparées des actions. Les correspondances sont prêtes à être vérifiées."),
     (("evidence/incident/incident-note",), "Le constat est établi. Il décrit le résultat, pas encore l'auteur."),
     (("evidence/logs/access", "evidence/logs/terminal-history", "evidence/logs/command-audit", "evidence/logs/failed-commands"), "La chronologie technique se précise. Comparez les succès, les actions et le premier échec."),
-    (("evidence/team/interviews",), "Les témoignages sont confrontés aux traces. Une déclaration ne vaut que si les horaires la confirment."),
+    (("evidence/team/notes", "evidence/team/interviews"), "Les témoignages sont confrontés aux traces. Une déclaration ne vaut que si les horaires la confirment."),
     (("evidence/git/branch-log", "evidence/git/reflog"), "Git confirme l'ordre des opérations. Utilisez-le pour vérifier la chronologie, pas pour conclure seul."),
 )
 
@@ -90,16 +86,11 @@ INTERLUDE_DIALOGUES = {
 }
 
 REPORT_STAGES = (
-    "Quels sont le projet, le fichier recherché et les rôles de l'équipe ?",
+    "Quels sont le projet, le fichier recherché, les rôles et les questions de l'enquête ?",
     "Quelles correspondances avez-vous trouvées entre membres, sessions, credentials et terminaux ?",
-    "Quel est le dernier état certain de l'archive avant l'incident ?",
-    "Quelles déclarations devez-vous vérifier et quelles pistes semblent légitimes ?",
-    "Que savez-vous de la fenêtre pendant laquelle l'archive disparaît ?",
-    "Quelles sont les questions auxquelles votre rapport doit répondre ?",
-    "Quelle correspondance d'identité est confirmée par plusieurs fichiers ?",
     "Que constate exactement la note d'incident, sans en déduire l'auteur ?",
     "Quelle chronologie pouvez-vous établir à partir des logs ?",
-    "Quelle déclaration est confirmée ou contredite par les traces ?",
+    "Quelles déclarations sont confirmées ou contredites par les traces ?",
     "Que confirme Git dans l'ordre des opérations ?",
 )
 
@@ -137,6 +128,11 @@ def _write_session_block(log_path: Path, label: str, content: str) -> None:
         log.write(f"[{timestamp}] {label}_END\n")
 
 
+def _looks_like_command(value: str) -> bool:
+    first_word = value.split(maxsplit=1)[0].lower()
+    return first_word in COMMAND_WORDS
+
+
 def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
     """Store one student answer without replacing an existing answer."""
     report = root / "investigation-report.md"
@@ -154,13 +150,19 @@ def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
         _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=missing")
         return
+    _write_session_log(log_path, f"INPUT report_stage={stage} value={answer}")
     if not answer:
         dialogue = "[Mickael] Réponse vide : rien n'a été écrit dans le rapport."
         print(_paint(YELLOW, dialogue))
         _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=empty")
         return
-    _write_session_log(log_path, f"INPUT report_stage={stage} value={answer}")
+    if _looks_like_command(answer):
+        dialogue = "[Mickael] Cette étape attend une note d'enquête, pas une commande. La réponse n'a pas été enregistrée."
+        print(_paint(YELLOW, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
+        _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=command_rejected")
+        return
     content = report.read_text()
     marker = f"<!-- NORTHSTAR_STAGE_{stage} -->"
     completed_marker = f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->"
@@ -191,13 +193,19 @@ def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
             _write_session_log(log_path, f"DIALOGUE {dialogue}")
             _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=missing")
             return
+        _write_session_log(log_path, f"INPUT report_correction_stage={stage} value={answer}")
         if not answer:
             dialogue = "[Mickael] Réponse vide : la réponse existante est conservée."
             print(_paint(YELLOW, dialogue))
             _write_session_log(log_path, f"DIALOGUE {dialogue}")
             _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=empty")
             return
-        _write_session_log(log_path, f"INPUT report_correction_stage={stage} value={answer}")
+        if _looks_like_command(answer):
+            dialogue = "[Mickael] Cette étape attend une note d'enquête, pas une commande. La réponse existante est conservée."
+            print(_paint(YELLOW, dialogue))
+            _write_session_log(log_path, f"DIALOGUE {dialogue}")
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=command_rejected")
+            return
         marker_start = content.find(completed_marker)
         answer_line_end = content.rfind("\n", 0, marker_start)
         answer_line_start = content.rfind("\n", 0, answer_line_end) + 1
