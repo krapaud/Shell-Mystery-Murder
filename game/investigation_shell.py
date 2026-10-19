@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 
-HELP = """Commandes : .files, .cat <fichier>, .find <motif>, .grep <motif> <fichier>, .help, .exit.
+HELP = """Commandes : .files, .cat <fichier>, .find <motif>, .grep <motif> <fichier>, .help (ou help), .exit.
 Les commandes Shell de lecture (find, cat, grep, cut, sort, awk, head, tail)
 peuvent aussi être utilisées. Les écritures et suppressions sont interdites."""
 REACTIONS = {
@@ -64,7 +64,7 @@ def _custom(root: Path, line: str) -> bool:
     command = parts[0].lower()
     if command in {".exit", ".quit"}:
         return False
-    if command in {".help", ".?"}:
+    if command in {".help", ".?", "help"}:
         print(_paint(CYAN, HELP))
     elif command == ".files":
         print(_line())
@@ -100,6 +100,8 @@ def run_shell_console(root: Path) -> int:
             break
         if not line:
             continue
+        if line.lower() == "help":
+            line = ".help"
         if line.startswith("."):
             try:
                 if not _custom(root, line):
@@ -113,6 +115,8 @@ def run_shell_console(root: Path) -> int:
             print(output, end="")
             if error:
                 print(error, end="")
+                if "No such file or directory" in error:
+                    print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
             table = next((key for key in REACTIONS if key in line), None)
             if table:
                 print(_paint(YELLOW, f"[Mickael] {REACTIONS[table]}"))
