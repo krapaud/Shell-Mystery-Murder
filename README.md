@@ -3,7 +3,8 @@
 ![Affiche Northstar : The Last commit](assets/northstar-mystery-faceoff.png)
 
 > « L'archive de livraison a disparu avant la présentation. Les fichiers
-> existent encore, mais ils ne racontent pas tous la même partie de l'histoire. »
+> existent encore, mais ils ne racontent pas tous
+> la même partie de l'histoire. »
 
 ## Votre mission
 
@@ -122,10 +123,14 @@ Quittez la console avec :
 .exit
 ```
 
-Complétez les six étapes de `investigation-report.md` dans la console, puis
-rédigez-y votre conclusion. La validation finale exige les six étapes
-complétées. Vous pouvez garder des notes complémentaires à part. Le rapport
-doit contenir :
+À chaque étape validée, Mickael vous demandera une note et l'ajoutera à la
+rubrique correspondante de `investigation-report.md`. Une réponse déjà saisie
+n'est jamais remplacée sans vous demander confirmation. Pour revenir sur une
+note, utilisez `.correct 1` à `.correct 6` dans la console. Mickael vous
+avertira avant la modification. Après les six étapes,
+quittez la console et rédigez la conclusion dans le rapport. La validation
+finale exige les six étapes complétées. Vous pouvez garder des notes
+complémentaires à part. Le rapport doit contenir :
 
 - une chronologie argumentée ;
 - l'action qui explique la disparition ;
@@ -133,9 +138,15 @@ doit contenir :
 - la credential utilisée et son propriétaire ;
 - l'acteur identifié ;
 - au moins trois familles de preuves indépendantes ;
-- les fausses pistes écartées et la raison de leur exclusion.
+- les fausses pistes écartées et la raison de leur exclusion ;
 - la différence entre propriétaire du droit, utilisateur de la session et
   personne qui a réalisé l'action.
+
+Les trois notes numérotées retrouvées dans des archives différentes forment
+une même pensée. Rassemblez-les dans l'ordre, puis décidez quelles traces
+permettent de vérifier ce qu'elles suggèrent. La narration de Mickael évolue
+quand vous avez consulté l'ensemble des preuves requises, pas après une seule
+commande ou un seul fichier.
 
 ## Validation finale
 

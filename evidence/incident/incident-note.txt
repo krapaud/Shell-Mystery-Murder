@@ -7,4 +7,4 @@ first_observed_at=2026-10-19 15:43:01
 related_branch=hotfix/release
 warning=Le constat indique le résultat, pas l'identité de l'auteur.
 
-Note de reprise [3/3] : command-audit.txt, colonne access_ref.
+Note de reprise [3/3] : reliez cette référence à la cible, puis l'heure et le terminal à une session.

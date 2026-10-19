@@ -2,22 +2,22 @@
 
 ## Journal de progression
 
-### Étape 1 : Les dossiers de l'affaire
+### Étape 1 : La mission et la première certitude
 <!-- NORTHSTAR_STAGE_1 -->
 
-### Étape 2 : Les identités et les accès
+### Étape 2 : Les identités, les accès et les sessions
 <!-- NORTHSTAR_STAGE_2 -->
 
-### Étape 3 : Le constat d'incident
+### Étape 3 : Le constat, et ce qu'il ne prouve pas
 <!-- NORTHSTAR_STAGE_3 -->
 
-### Étape 4 : La chronologie technique
+### Étape 4 : La chronologie et la référence op-417
 <!-- NORTHSTAR_STAGE_4 -->
 
-### Étape 5 : Les déclarations
+### Étape 5 : Les témoignages et leurs recoupements
 <!-- NORTHSTAR_STAGE_5 -->
 
-### Étape 6 : La confirmation Git
+### Étape 6 : Ce que Git confirme, et ce qu'il ne prouve pas
 <!-- NORTHSTAR_STAGE_6 -->
 
 ## Chronologie

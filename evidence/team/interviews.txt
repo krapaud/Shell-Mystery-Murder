@@ -1,10 +1,12 @@
 NORTHSTAR INTERVIEWS
 
-Kevin|15:47|I created hotfix/release so the presentation would not be blocked. I did not remove the archive.
-Anthony|15:48|I checked the published archive from poste-02. My changes were limited to the release notes.
-Lisa|15:49|I changed package.sh permissions from poste-03. I never needed to open the release archive.
-Lydie|15:50|I checked the archive after the review window. The file was already missing.
-Mickael|15:51|My checksum was successful before the review. I left poste-01 before the branch was created.
+TRANSCRIPTION DE MICKAEL, 15:47-15:51
 
-Mentor note: statements are leads, not conclusions. Compare each claim with
-the session window, terminal history, access log and Git evidence.
+Kevin|15:47|Oui, hotfix/release, c'est moi qui l'ai créée. Je suis passé au poste-04 pour remettre la livraison en route. Je n'ai pas supprimé le paquet.
+Anthony|15:48|cred-17 est rattachée à mon compte. Je l'ai laissée active pour le relais; son nom dans un journal ne dit pas qui était devant l'écran.
+Lisa|15:49|À 15:39, j'ai changé les droits de scripts/package.sh depuis poste-03. Mon intervention concerne ce script, pas l'archive publiée.
+Lydie|15:50|Je travaillais au poste-05. J'ai vu quelqu'un rejoindre le poste-04, sans distinguer son visage. Il a dit qu'il relançait la livraison. À 15:43:01, ma lecture de l'archive a échoué.
+Mickael|15:51|Mon empreinte était correcte à 15:33:41. J'ai pris ce résultat pour une garantie plus longue qu'elle ne l'était. J'ai aussi regardé le nom du titulaire avant de vérifier les sessions.
+
+Les paroles sont transcrites après l'incident. Vérifiez les horaires et les
+actions dans les journaux avant de retenir une déclaration.
