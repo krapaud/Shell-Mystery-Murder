@@ -1,4 +1,4 @@
-DOSSIER 03 — LA DERNIÈRE VÉRIFICATION
+DOSSIER 03 : LA DERNIÈRE VÉRIFICATION
 
 Mickael vérifie l'empreinte de l'archive depuis poste-01 avant que l'équipe ne
 commence la revue. Son contrôle est terminé avec succès. Il signale ensuite

@@ -1,4 +1,4 @@
-DOSSIER 04 — LES TÉMOINS
+DOSSIER 04 : LES TÉMOINS
 
 Lisa modifie les permissions du script package.sh. Lydie ouvre une session de
 lecture pour consulter la checklist. Anthony met à jour les notes de release.

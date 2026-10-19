@@ -1,70 +1,135 @@
-# Northstar — L'archive disparue
+# Northstar : l'archive disparue
 
-## L'affaire
+> « L'archive de livraison a disparu quelques minutes avant la présentation.
+> Vous connaissez le fichier manquant. Découvrez qui a utilisé l'accès et
+> comment l'action a été réalisée. »
+>
+> Mickael, reviewer du projet Northstar
 
-Le projet étudiant **Northstar** doit être présenté aujourd'hui. L'archive de
-livraison est prête et déposée dans l'espace release. Quelques minutes avant
-la présentation, `release/release-candidate.tar.gz` disparaît. Au même moment,
-une branche `hotfix/release` apparaît dans le dépôt.
+## Votre mission
 
-Vous êtes l'équipe chargée de reprendre l'enquête. Les traces sont dispersées
-et plusieurs membres ont effectué des actions parfaitement légitimes. Votre
-mission est de reconstituer les faits, de comprendre comment l'archive a
-disparu et d'identifier la personne qui doit répondre de l'incident.
+Le projet étudiant **Northstar** doit être présenté aujourd'hui. L'archive
+`release/release-candidate.tar.gz` était prête dans l'espace de livraison,
+mais elle disparaît à 15 h 42. Une branche `hotfix/release` apparaît presque
+au même moment.
 
-Travaillez en équipe, échangez vos hypothèses et ne modifiez jamais les
-éléments de l'enquête.
+Vous devez prouver :
 
-## Les personnes concernées
+1. quel propriétaire de credential a été utilisé ;
+2. qui était l'acteur présent sur le terminal ;
+3. comment les traces permettent de relier ces deux identités.
 
-- **Kevin**, coordinateur de la livraison ;
-- **Anthony**, propriétaire technique de l'espace release ;
-- **Mickael**, reviewer chargé de vérifier l'intégrité de l'archive ;
-- **Lisa**, responsable de la documentation et du script de paquetage ;
-- **Lydie**, chargée de la vérification finale.
+Les traces concernent Kevin, Anthony, Mickael, Lisa et Lydie. Plusieurs actions
+sont légitimes. Ne concluez jamais à partir d'un seul indice.
 
-Le propriétaire d'un accès n'est pas forcément la personne qui l'utilise.
-Cette distinction sera importante pour votre enquête.
+## Le premier pas
 
-## Les dossiers
+Placez-vous à la racine du projet, puis lancez :
 
-Les informations sont réparties dans six dossiers. Ils ne sont pas classés
-dans l'ordre des événements :
+~~~bash
+python3 main.py
+~~~
 
-1. **Ouverture du projet** — la livraison et les responsabilités ;
-2. **Les droits** — les accès et les credentials ;
-3. **La dernière vérification** — le contrôle effectué avant l'incident ;
-4. **Les témoins** — les actions légitimes de l'équipe ;
-5. **La disparition** — l'archive manquante et la branche suspecte ;
-6. **Le rapport final** — les questions auxquelles votre enquête doit répondre.
+La console d'enquête s'ouvre automatiquement. Tapez `.help` pour consulter les
+commandes disponibles, puis `.files` pour afficher les archives de l'affaire.
+Travaillez en équipe, notez les preuves et ne modifiez pas les fichiers.
 
-Les dossiers donnent le contexte. Les preuves techniques permettent de vérifier
-ou de réfuter ce qu'ils racontent.
+## Les dossiers de Mickael
 
-## Parcours conseillé
+> « Chaque dossier ne raconte qu'une partie de l'histoire. Vérifiez les heures,
+> les terminaux et les identifiants avant de croire une déclaration. »
 
-1. Commencez par `dossiers/` et ouvrez les dossiers dans l'ordre de votre choix.
-2. Relevez les noms, heures, sessions, branches et chemins.
-3. Retrouvez les traces correspondantes dans `evidence/`.
-4. Croisez au moins trois familles de preuves.
-5. Écartez les actions légitimes avant de conclure.
-6. Rédigez `investigation-report.md`.
+Vous pouvez consulter les six dossiers. Ils donnent le contexte de l'enquête,
+mais les preuves techniques de `evidence/` permettent de vérifier ce qu'ils
+racontent.
 
-## Votre rapport
+### Dossier 1 : La livraison connue
 
-Votre rapport doit présenter :
+Retrouvez le projet Northstar, le fichier de livraison et les responsabilités
+de chacun. Notez le chemin exact de l'archive et le rôle de Kevin, Anthony,
+Mickael, Lisa et Lydie.
 
-- la chronologie des événements ;
-- les personnes, sessions et terminaux concernés ;
-- les fausses pistes écartées ;
-- au moins trois preuves indépendantes ;
-- une conclusion argumentée et son niveau de certitude.
+**Mickael :** « Commencez par identifier ce qui devait être protégé et les
+personnes qui avaient une raison légitime d'y accéder. »
 
-Une accusation fondée sur un seul indice ne suffit pas.
+### Dossier 2 : Les droits d'accès
 
-## Commencer l'enquête
+Comparez les credentials, leurs propriétaires et les sessions ouvertes sur les
+terminaux. Distinguez le propriétaire d'un accès de la personne qui l'utilise.
 
-```bash
-cd Shell-Mystery-Murder
-find dossiers evidence -type f -print | sort
-```
+Notez les identifiants `member_id`, `credential_id`, `session_id` et le
+terminal correspondant. Un droit rend une action possible, mais ne prouve pas
+qui l'a effectuée.
+
+**Mickael :** « Reliez les fichiers d'identité avant d'interpréter les logs.
+Un nom de propriétaire n'est pas encore le nom de l'acteur. »
+
+### Dossier 3 : La dernière vérification
+
+Retrouvez le contrôle d'intégrité réalisé avant l'incident. Comparez son heure
+avec l'heure de disparition signalée dans la note d'incident.
+
+Vérifiez que l'archive existait encore avant la période suspecte et notez le
+terminal utilisé pour cette vérification.
+
+**Mickael :** « Mon contrôle confirme l'état de l'archive à un instant précis.
+Utilisez-le pour construire le début de votre chronologie. »
+
+### Dossier 4 : Les actions légitimes
+
+Rassemblez les traces de Lisa, Anthony et Lydie. Certaines commandes échouent,
+certaines portent sur le script de paquetage et certaines vérifient la
+checklist. Elles doivent être comparées aux sessions et aux heures, pas
+simplement écartées parce qu'elles semblent suspectes.
+
+Pour chaque personne, notez ce qui est observé, ce qui est possible et ce qui
+est confirmé par une autre famille de preuves.
+
+**Mickael :** « Une action proche de l'incident n'est pas nécessairement le
+vol. Confrontez chaque piste à son terminal et à sa cible. »
+
+### Dossier 5 : La disparition et la branche
+
+Retrouvez l'action qui concerne directement l'archive disparue. Reconstituez
+la suite des opérations : variable de chemin, création de branche, action sur
+le fichier et push de la branche.
+
+Comparez `access.log`, `terminal-history.log`, `command-audit.txt`,
+`branch-log.txt` et `reflog.txt`. Les journaux ne présentent pas tous le même
+niveau de détail.
+
+**Mickael :** « Une trace technique décrit une action. Une autre doit vous
+permettre d'identifier la personne devant le terminal. »
+
+### Dossier 6 : La conclusion
+
+Formulez votre conclusion à partir de plusieurs traces indépendantes. Vérifiez :
+
+- le moment où l'archive était encore présente ;
+- la session et le terminal liés à sa disparition ;
+- la credential utilisée et son propriétaire ;
+- la branche créée et poussée ;
+- les actions légitimes qui écartent les autres personnes.
+
+Vous devez réunir au moins trois preuves indépendantes avant de conclure.
+
+Votre rapport doit contenir une chronologie, les fausses pistes écartées et une
+conclusion argumentée.
+
+**Mickael :** « Votre preuve finale contient le propriétaire de l'accès puis
+l'acteur de l'action. Confirmez les deux identités avec les heures et les
+terminaux. »
+
+## Validation finale
+
+Quand votre enquête est terminée, quittez la console avec `.exit`, puis lancez :
+
+~~~bash
+python3 main.py --answer 'PROPRIETAIRE|ACTEUR'
+~~~
+
+Remplacez les deux valeurs par votre conclusion, dans cet ordre. Une réponse
+correcte permettra à Mickael de clôturer l'incident Northstar.
+
+> « L'archive a disparu, mais la chronologie a conservé la trace de l'action. »
+> Mickael

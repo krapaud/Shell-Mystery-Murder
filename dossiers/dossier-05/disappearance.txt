@@ -1,4 +1,4 @@
-DOSSIER 05 — L'INCIDENT
+DOSSIER 05 : L'INCIDENT
 
 À 15 h 42, l'archive n'est plus disponible. Une branche hotfix/release est
 apparue quelques minutes auparavant et a été poussée depuis poste-04.

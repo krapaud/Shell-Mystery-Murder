@@ -1,4 +1,4 @@
-DOSSIER 01 — LE PROJET NORTHSTAR
+DOSSIER 01 : LE PROJET NORTHSTAR
 
 Le projet étudiant Northstar doit être présenté à 16 h. Kevin coordonne la
 livraison et dépose l'archive release/release-candidate.tar.gz dans le
