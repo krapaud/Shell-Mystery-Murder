@@ -3,6 +3,7 @@
 import shlex
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -98,40 +99,54 @@ def _progress_reaction(command: str, step: int, consulted: set[str]) -> tuple[in
     return step, None
 
 
-def _record_stage_answer(root: Path, stage: int) -> None:
+def _write_session_log(log_path: Path, message: str) -> None:
+    timestamp = datetime.now().astimezone().isoformat(timespec="seconds")
+    with log_path.open("a", encoding="utf-8") as log:
+        log.write(f"[{timestamp}] {message}\n")
+
+
+def _record_stage_answer(root: Path, stage: int, log_path: Path) -> None:
     """Store one student answer without replacing an existing answer."""
     report = root / "investigation-report.md"
     if stage < 1 or stage > len(REPORT_STAGES) or not report.exists():
         return
     print(_paint(YELLOW, f"[Mickael] Étape {stage} validée. {REPORT_STAGES[stage - 1]}"))
+    _write_session_log(log_path, f"STAGE_VALIDATED stage={stage}")
     try:
         answer = input(_paint(CYAN, "Votre note : ")).strip()
     except EOFError:
         print(_paint(YELLOW, "[Mickael] Aucune note saisie. L'étape reste validée, mais le rapport n'est pas complété."))
+        _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=missing")
         return
     if not answer:
         print(_paint(YELLOW, "[Mickael] Réponse vide : rien n'a été écrit dans le rapport."))
+        _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=empty")
         return
     content = report.read_text()
     marker = f"<!-- NORTHSTAR_STAGE_{stage} -->"
     completed_marker = f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->"
     if completed_marker in content:
         print(_paint(YELLOW, "[Mickael] Une réponse existe déjà pour cette étape."))
+        _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=already_exists")
         try:
             correction = input(_paint(CYAN, "Voulez-vous la corriger ? (oui/non) : ")).strip().lower()
         except EOFError:
             print(_paint(YELLOW, "[Mickael] Aucune confirmation reçue. La réponse existante est conservée."))
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=no_confirmation")
             return
         if correction not in {"oui", "o", "yes", "y"}:
             print(_paint(YELLOW, "[Mickael] La réponse existante n'a pas été modifiée."))
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=declined")
             return
         try:
             answer = input(_paint(CYAN, "Nouvelle réponse : ")).strip()
         except EOFError:
             print(_paint(YELLOW, "[Mickael] Aucune nouvelle réponse reçue. La réponse existante est conservée."))
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=missing")
             return
         if not answer:
             print(_paint(YELLOW, "[Mickael] Réponse vide : la réponse existante est conservée."))
+            _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=empty")
             return
         marker_start = content.find(completed_marker)
         answer_line_end = content.rfind("\n", 0, marker_start)
@@ -139,9 +154,11 @@ def _record_stage_answer(root: Path, stage: int) -> None:
         updated = content[:answer_line_start] + answer + content[answer_line_end:]
         report.write_text(updated)
         print(_paint(GREEN, f"[Mickael] Réponse de l'étape {stage} corrigée."))
+        _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=updated")
         return
     if marker not in content:
         print(_paint(RED, "[Mickael] Cette rubrique de rapport est introuvable. Aucune écriture effectuée."))
+        _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=missing_marker")
         return
     updated = content.replace(marker, f"{answer}\n{completed_marker}", 1)
     if updated == content:
@@ -149,6 +166,7 @@ def _record_stage_answer(root: Path, stage: int) -> None:
         return
     report.write_text(updated)
     print(_paint(GREEN, f"[Mickael] Note enregistrée dans l'étape {stage} du rapport."))
+    _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=recorded")
 
 
 def _safe_path(root: Path, value: str) -> Path:
@@ -239,6 +257,11 @@ def _custom(root: Path, line: str) -> bool:
 def run_shell_console(root: Path) -> int:
     progress_step = 0
     consulted = set()
+    log_dir = root / ".student-data"
+    log_dir.mkdir(exist_ok=True)
+    log_path = log_dir / f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log"
+    _write_session_log(log_path, "SESSION_START")
+    print(_paint(YELLOW, f"Journal local de session : {log_path.relative_to(root)}"))
     print(_line())
     print(_paint(GREEN, "Console d'enquête prête. Northstar vous attend."))
     print(_paint(YELLOW, "Tapez .help pour afficher les commandes disponibles."))
@@ -252,6 +275,7 @@ def run_shell_console(root: Path) -> int:
             break
         if not line:
             continue
+        _write_session_log(log_path, f"COMMAND {line}")
         if line.lower() == "help":
             line = ".help"
         if line.startswith("."):
@@ -267,12 +291,17 @@ def run_shell_console(root: Path) -> int:
             print(output, end="")
             if error:
                 print(error, end="")
+                _write_session_log(log_path, f"COMMAND_ERROR {error.strip()}")
                 if "No such file or directory" in error:
                     print(_paint(YELLOW, "[Mickael] Le chemin n'existe pas. Utilisez .files ou ls pour retrouver le nom exact du dossier et du fichier."))
             progress_step, progress = _progress_reaction(line, progress_step, consulted)
             if progress:
                 print(_paint(YELLOW, f"[Mickael] {progress}"))
-                _record_stage_answer(root, progress_step)
+                _record_stage_answer(root, progress_step, log_path)
+            elif any(marker in line.lower() for markers, _ in PROGRESS_STEPS[progress_step:] for marker in markers):
+                _write_session_log(log_path, "PROGRESS pending_required_evidence")
         except (OSError, ValueError) as error:
             print(_paint(RED, f"Commande refusée : {error}"))
+            _write_session_log(log_path, f"COMMAND_REJECTED {error}")
+    _write_session_log(log_path, "SESSION_END")
     return 0
