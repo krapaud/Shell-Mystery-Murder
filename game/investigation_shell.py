@@ -86,12 +86,12 @@ INTERLUDE_DIALOGUES = {
 }
 
 FILE_DIALOGUES = {
-    "dossier-01": "Le briefing sépare déjà le dépôt, l'archive et les accès. Notez ces rôles : ils serviront à lire les preuves sans les confondre.",
-    "dossier-02": "Ici, les droits sont associés à des identifiants précis. La prochaine question est de savoir quelle session les a réellement utilisés.",
-    "dossier-03": "Le contrôle d'intégrité fournit une heure de référence. Toute action liée à la disparition devra être comparée à ce repère.",
-    "dossier-04": "Les déclarations décrivent des observations différentes. Gardez leurs horaires et leurs formulations pour les confronter aux traces techniques.",
-    "dossier-05": "Ce dossier place le renommage, la branche et la disparition dans la même fenêtre. Il faudra vérifier l'ordre exact dans les logs.",
-    "dossier-06": "Les questions finales distinguent propriétaire de l'accès, utilisateur de la session et acteur de l'action. Une seule preuve ne suffira pas.",
+    "dossier-01": "Le briefing distingue la copie de travail de la copie publiée. Notez aussi les rôles : une raison légitime d'ouvrir une session ne prouve pas une modification.",
+    "dossier-02": "Une credential partagée apparaît dans plusieurs sessions. Ne retenez donc pas le premier nom : reliez chaque action à sa session et à son terminal.",
+    "dossier-03": "L'heure écrite dans un témoignage peut différer de celle du terminal. Cherchez le dernier état certain et mesurez la fenêtre jusqu'au constat.",
+    "dossier-04": "Les témoins peuvent être exacts sur leur objectif mais imprécis sur l'heure ou la cible. C'est la comparaison des quatre champs qui les départagera.",
+    "dossier-05": "Séparez les préparatifs, l'action qui produit l'effet et sa découverte. Les journaux n'emploient pas tous le même niveau de détail.",
+    "dossier-06": "La conclusion devra expliquer la chaîne complète : état, action, session, acteur et propriétaire. Une correspondance isolée ne suffira pas.",
     "identity/members": "La liste relie les noms aux member_id. Ces identifiants permettent maintenant de lire les journaux sans deviner les personnes.",
     "identity/credentials": "Chaque credential a un propriétaire et un périmètre. Un propriétaire d'accès n'est pas automatiquement l'acteur devant le terminal.",
     "identity/sessions": "Les sessions ajoutent un terminal et une période à chaque utilisateur. Comparez ces horaires avec ceux des commandes et des accès.",
