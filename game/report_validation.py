@@ -42,7 +42,7 @@ ANALYSIS_FIELDS = {
     "Action qui explique la disparition": 10,
     "Session et terminal concernés": 8,
     "Credential utilisée et son propriétaire": 8,
-    "Acteur au terminal": 3,
+    "Personne probablement associée à l'action": 3,
     "Lien entre propriétaire, utilisateur et acteur": 12,
 }
 

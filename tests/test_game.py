@@ -25,6 +25,16 @@ from game.report_validation import validate_report
 ROOT = Path(__file__).parents[1]
 
 
+def seed_validated_stage(root: Path, stage: int) -> None:
+    log_dir = root / ".student-data"
+    log_dir.mkdir(exist_ok=True)
+    (log_dir / "session-current.log").write_text(
+        f"[2026-10-20T09:00:00+02:00] STAGE_VALIDATED stage={stage}\n"
+        "[2026-10-20T09:01:00+02:00] SESSION_END\n",
+        encoding="utf-8",
+    )
+
+
 def complete_report() -> str:
     stages = "\n".join(
         f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->" for stage in range(1, 7)
@@ -61,7 +71,7 @@ def complete_report() -> str:
 Action qui explique la disparition : une opération de test produit l'état manquant.
 Session et terminal concernés : la session S-TEST est ouverte sur le terminal T-TEST.
 Credential utilisée et son propriétaire : la credential C-TEST appartient à la personne A.
-Acteur au terminal : la personne B réalise l'opération depuis la session observée.
+Personne probablement associée à l'action : les journaux relient la personne B à la session observée, sans preuve visuelle directe.
 Lien entre propriétaire, utilisateur et acteur : le registre, la session et les journaux décrivent trois rôles qu'il faut recouper.
 
 ## Conclusion
@@ -110,6 +120,34 @@ class GameStartupTests(unittest.TestCase):
             (root / "members.txt").write_text("m-01|Kevin\n", encoding="utf-8")
             output, error = _run(root, "grep m- members.txt | cut -d'|' -f1")
             self.assertEqual((output, error), ("m-01\n", ""))
+
+    def test_quoted_pipe_delimiter_is_not_a_pipeline(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "members.txt").write_text("m-01|Kevin\n", encoding="utf-8")
+            output, error = _run(root, "cut -d '|' -f 1 members.txt")
+            self.assertEqual((output, error), ("m-01\n", ""))
+
+    def test_quoted_shell_operators_are_arguments_but_unquoted_ones_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "sample.txt").write_text(
+                "keep|value\n&& || ; > >> &\n", encoding="utf-8"
+            )
+            output, error = _run(root, "grep 'keep|value' sample.txt")
+            self.assertEqual((output, error), ("keep|value\n", ""))
+            for operator in ("&&", "||", ";", ">", ">>", "&"):
+                with self.subTest(quoted_operator=operator):
+                    output, error = _run(root, f"grep '{operator}' sample.txt")
+                    self.assertEqual(error, "")
+                    self.assertIn(operator, output)
+            for operator in ("&&", "||", ";", ">", ">>", "&"):
+                with self.subTest(operator=operator), self.assertRaisesRegex(
+                    ValueError, "interdits"
+                ):
+                    _run(root, f"cat sample.txt {operator} cat sample.txt")
+            with self.assertRaisesRegex(ValueError, "Guillemets non terminés"):
+                _run(root, "grep 'keep sample.txt")
 
     def test_six_stage_markers_alone_do_not_validate_the_report(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -257,11 +295,13 @@ class GameStartupTests(unittest.TestCase):
             (Path(directory) / "investigation-report.md").write_text(
                 complete_report(), encoding="utf-8"
             )
+            output = StringIO()
             with patch.object(main, "ROOT", Path(directory)), patch.object(
                 sys, "argv", ["main.py", "--answer", "synthetic|proof"]
-            ), patch.object(main, "validate", return_value=0) as answer_validator:
+            ), patch.object(main, "validate", return_value=0) as answer_validator, redirect_stdout(output):
                 self.assertEqual(main.main(), 0)
             answer_validator.assert_called_once_with("synthetic|proof")
+            self.assertIn("ne constituent pas une identification visuelle", output.getvalue())
 
     def test_test_sources_do_not_embed_an_uppercase_answer_pair(self):
         answer_pattern = re.compile(r"\b[A-Z]{3,}\|[A-Z]{3,}\b")
@@ -338,6 +378,41 @@ class GameStartupTests(unittest.TestCase):
             self.assertIn("team-interview:Lydie", observed)
             self.assertNotIn("team-interview:Kevin", observed)
 
+    def test_interview_evidence_handles_grep_prefixes_for_multiple_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            team = root / "evidence" / "team"
+            team.mkdir(parents=True)
+            (team / "notes.txt").write_text("2026 note\n", encoding="utf-8")
+            (team / "interviews.txt").write_text(
+                "Kevin|15:47|Je nie.\nLydie|15:50|J'ai vu quelqu'un.\n",
+                encoding="utf-8",
+            )
+            command = "grep . evidence/team/notes.txt evidence/team/interviews.txt"
+            output, error = _run(root, command)
+            observed, _, _ = _result_evidence(root, command, output, error)
+            self.assertIn("team-interview:Kevin", observed)
+            self.assertIn("team-interview:Lydie", observed)
+
+    def test_multi_file_grep_only_credits_files_present_in_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = root / "dossiers" / "dossier-01" / "briefing.txt"
+            second = root / "dossiers" / "dossier-02" / "access-review.txt"
+            first.parent.mkdir(parents=True)
+            second.parent.mkdir(parents=True)
+            first.write_text("needle found here\n", encoding="utf-8")
+            second.write_text("different evidence only\n", encoding="utf-8")
+            command = (
+                "grep needle dossiers/dossier-01/briefing.txt "
+                "dossiers/dossier-02/access-review.txt"
+            )
+            output, error = _run(root, command)
+            self.assertEqual(error, "")
+            observed, _, _ = _result_evidence(root, command, output, error)
+            self.assertIn("dossier-01", observed)
+            self.assertNotIn("dossier-02", observed)
+
     def test_custom_file_dialogues_are_logged_with_output(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -372,6 +447,7 @@ class GameStartupTests(unittest.TestCase):
                 "<!-- NORTHSTAR_STAGE_1_COMPLETED -->\n",
                 encoding="utf-8",
             )
+            seed_validated_stage(root, 1)
             terminal_output = StringIO()
             prompts = []
             answers = iter((".correct 1", "non", ".exit"))
@@ -392,6 +468,92 @@ class GameStartupTests(unittest.TestCase):
             self.assertIn("REPORT_CORRECTION stage=1 status=declined", log)
             self.assertTrue(any("Voulez-vous la corriger ?" in prompt for prompt in prompts))
 
+    def test_correct_on_empty_stage_opens_first_answer_entry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "investigation-report.md"
+            report.write_text(
+                "### Étape 1 : test\n<!-- NORTHSTAR_STAGE_1 -->\n",
+                encoding="utf-8",
+            )
+            log_dir = root / ".student-data"
+            log_dir.mkdir()
+            (log_dir / "session-current.log").write_text(
+                "[2026-10-20T09:00:00+02:00] STAGE_VALIDATED stage=1\n"
+                "[2026-10-20T09:01:00+02:00] SESSION_END\n",
+                encoding="utf-8",
+            )
+            with patch(
+                "builtins.input",
+                side_effect=[".correct 1", "Première note saisie", ".exit"],
+            ), redirect_stdout(StringIO()):
+                run_shell_console(root)
+            updated = report.read_text(encoding="utf-8")
+            self.assertIn("Première note saisie", updated)
+            self.assertIn("<!-- NORTHSTAR_STAGE_1_COMPLETED -->", updated)
+            log = (root / ".student-data" / "session-current.log").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("status=empty_ready_for_answer", log)
+            self.assertNotIn("status=no_existing_answer", log)
+
+    def test_empty_first_answer_does_not_claim_validation_again(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "investigation-report.md"
+            report.write_text(
+                "### Étape 1 : test\n<!-- NORTHSTAR_STAGE_1 -->\n",
+                encoding="utf-8",
+            )
+            log_dir = root / ".student-data"
+            log_dir.mkdir()
+            (log_dir / "session-current.log").write_text(
+                "[2026-10-20T09:00:00+02:00] STAGE_VALIDATED stage=1\n"
+                "[2026-10-20T09:01:00+02:00] SESSION_END\n",
+                encoding="utf-8",
+            )
+            terminal_output = StringIO()
+            with patch(
+                "builtins.input", side_effect=[".correct 1", "", ".exit"]
+            ), redirect_stdout(terminal_output):
+                run_shell_console(root)
+
+            output = terminal_output.getvalue()
+            self.assertIn("L'étape 1 est encore vide", output)
+            self.assertIn("Réponse vide", output)
+            self.assertNotIn("Étape 1 validée", output)
+            self.assertNotIn("Note enregistrée", output)
+            self.assertNotIn(
+                "<!-- NORTHSTAR_STAGE_1_COMPLETED -->",
+                report.read_text(encoding="utf-8"),
+            )
+
+    def test_correct_cannot_write_a_note_for_an_unvalidated_stage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "investigation-report.md"
+            original_report = (
+                "### Étape 6 : test\n"
+                "<!-- NORTHSTAR_STAGE_6 -->\n"
+                "<!-- NORTHSTAR_STAGE_6_COMPLETED -->\n"
+            )
+            report.write_text(original_report, encoding="utf-8")
+            terminal_output = StringIO()
+            with patch(
+                "builtins.input", side_effect=[".correct 6", "Ne pas enregistrer", ".exit"]
+            ), redirect_stdout(terminal_output):
+                run_shell_console(root)
+
+            output = terminal_output.getvalue()
+            self.assertIn("n'a pas encore été validée par les preuves", output)
+            self.assertNotIn("Votre première note", output)
+            self.assertNotIn("Ne pas enregistrer", report.read_text(encoding="utf-8"))
+            self.assertEqual(report.read_text(encoding="utf-8"), original_report)
+            log = (root / ".student-data" / "session-current.log").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("status=stage_not_validated", log)
+
     def test_confirmed_report_answer_correction_updates_only_that_stage(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -405,6 +567,7 @@ class GameStartupTests(unittest.TestCase):
                 "<!-- NORTHSTAR_STAGE_2 -->\n",
                 encoding="utf-8",
             )
+            seed_validated_stage(root, 1)
             with patch(
                 "builtins.input",
                 side_effect=[".correct 1", "oui", "Nouvelle note", ".exit"],
@@ -431,6 +594,7 @@ class GameStartupTests(unittest.TestCase):
                 "<!-- NORTHSTAR_STAGE_1_COMPLETED -->\n",
                 encoding="utf-8",
             )
+            seed_validated_stage(root, 1)
             with patch(
                 "builtins.input",
                 side_effect=[".correct 1", "oui", "Nouvelle note", ".exit"],
@@ -476,6 +640,7 @@ class GameStartupTests(unittest.TestCase):
                 root = Path(directory)
                 report = root / "investigation-report.md"
                 report.write_text(original, encoding="utf-8")
+                seed_validated_stage(root, 1)
                 with patch(
                     "builtins.input", side_effect=[".correct 1", ".exit"]
                 ), redirect_stdout(StringIO()):

@@ -72,7 +72,7 @@ PROGRESS_STEPS = (
     (("dossier-01", "dossier-02", "dossier-03", "dossier-04", "dossier-05", "dossier-06"), "Je pensais que l'empreinte validée clôturait la question. Il faut maintenant distinguer ce qu'elle prouve de ce qui s'est passé ensuite."),
     (("evidence/identity/members", "evidence/identity/credentials", "evidence/identity/sessions"), "J'ai d'abord suivi le nom attaché à cred-17. Les sessions me forcent à distinguer le titulaire du compte connecté et de la personne devant l'écran."),
     (("evidence/incident/incident-note",), "Le premier échec de Lydie fixe une borne, pas l'instant de la disparition. Il nous manque encore le dernier état vérifiable."),
-    (("evidence/logs/access", "evidence/logs/terminal-history", "evidence/logs/command-audit", "evidence/logs/failed-commands"), "La lecture réussit à 15:41:18 et échoue à 15:43:01 : une fenêtre de 1 min 43. op-417 relie l'export à une opération sur l'archive; ma piste Git n'explique pas encore ce geste."),
+    (("evidence/logs/access", "evidence/logs/terminal-history", "evidence/logs/command-audit", "evidence/logs/failed-commands"), "La lecture réussit à 15:41:18 et échoue à 15:43:01 : une fenêtre de 1 min 43. op-417 relie une session et une credential à une opération sur l'archive; cela établit un fait technique, pas encore l'identité de la personne au clavier."),
     (("evidence/team/notes", "evidence/team/interviews", "team-interview:Kevin", "team-interview:Anthony", "team-interview:Lisa", "team-interview:Lydie", "team-interview:Mickael"), "Lydie n'a pas reconnu le visage. Kevin confirme être passé au poste-04, mais nie avoir touché l'archive. Quelle trace relie cette présence à la session ?"),
     (("evidence/git/branch-log", "evidence/git/reflog"), "Le push arrive 28 secondes après l'opération sur le fichier. J'avais pris la branche pour la cause; la chronologie montre qu'elle accompagne l'incident. Séparons maintenant le compte du titulaire."),
 )
@@ -105,17 +105,17 @@ FILE_DIALOGUES = {
     "dossier-03": "J'ai traité mon contrôle comme une garantie. Le texte distingue pourtant une empreinte à un instant précis d'un accès réussi plus tard.",
     "dossier-04": "Ces résumés ne sont pas encore des preuves. Je veux entendre les déclarations exactes avant de choisir la version qui m'arrange.",
     "dossier-05": "La branche et l'archive disparaissent dans la même fenêtre, mais pas forcément par la même action. Séparons création, suppression et constat.",
-    "dossier-06": "La conclusion devra expliquer la chaîne complète : état, action, session, acteur et propriétaire. Une correspondance isolée ne suffira pas.",
+    "dossier-06": "La conclusion devra séparer les faits observés, la session et le compte technique, puis la personne probablement associée à l'action. Une correspondance isolée ne suffit pas à identifier qui était physiquement au clavier.",
     "identity/members": "La liste relie les noms aux member_id. Ces identifiants permettent maintenant de lire les journaux sans deviner les personnes.",
     "identity/credentials": "cred-17 est au nom d'Anthony, mais ce relevé ne dit pas qui s'en est servi. Je me suis arrêté trop tôt sur cette ligne.",
     "identity/sessions": "La même credential apparaît dans s-31, s-44 et s-52. Les personnes et les terminaux diffèrent; gardez ces trois sessions séparées.",
     "incident/incident-note": "Le constat indique quel fichier ou chemin a disparu et quand cela a été remarqué. Il décrit l'effet, pas encore son auteur.",
     "logs/access": "La lecture de 15:41:18 réussit après mon contrôle d'empreinte. J'avais laissé presque huit minutes sans preuve entre les deux.",
-    "logs/terminal-history": "Le terminal montre `rm` après la définition de RELEASE_DIR. Il faut vérifier que l'audit relie bien cette action au chemin de l'archive.",
+    "logs/terminal-history": "Le terminal montre `rm` après la définition de RELEASE_DIR. La variable désigne un chemin; elle ne confère aucun droit. Vérifions séparément l'accès et l'action consignés dans les journaux.",
     "logs/command-audit": "op-417 apparaît sur une opération réussie visant l'archive. La colonne access_ref relie les journaux, mais n'identifie pas encore la personne.",
     "logs/failed-commands": "Le dépôt Git ne contenait pas l'archive, mais cela ne signifie pas qu'elle était absente de l'espace publié. La lecture de Lydie est le premier échec pertinent.",
     "team/notes": "Ces notes donnent le contexte humain autour des horaires et des accès. Utilisez-les comme pistes à vérifier, pas comme preuves isolées.",
-    "team/interviews": "Lydie n'a pas identifié la personne qu'elle a vue. Kevin, lui, admet être passé au poste-04 mais nie la suppression. Les sessions peuvent-elles départager ces propos ?",
+    "team/interviews": "Lydie n'a pas identifié la personne qu'elle a vue. Kevin admet être passé au poste-04 mais nie la suppression. Ces déclarations et la session peuvent étayer une hypothèse, pas prouver à elles seules qui se trouvait devant l'écran.",
     "git/branch-log": "La branche est créée avant l'opération sur l'archive, puis poussée après. C'est le journal de commandes, pas le push, qui explique l'effet constaté.",
     "git/reflog": "Le reflog confirme le push à 15:42:44, après l'opération de 15:42:16. J'ai confondu deux événements proches parce qu'ils partageaient le même terminal.",
 }
@@ -174,8 +174,8 @@ def _result_evidence(root: Path, command: str, output: str, error: str) -> tuple
     """Identify files whose contents were returned, separately from discovered paths."""
     if error or not output.strip():
         return set(), set(), set()
-    tokens = shlex.split(command)
-    commands = {part[0] for part in _pipeline_parts(tokens) if part}
+    parts = [shlex.split(part) for part in _split_shell_operators(command)]
+    commands = {part[0] for part in parts if part}
     discovered = set()
     for marker in ("dossiers", "evidence"):
         if any(line.strip().startswith(marker + "/") for line in output.splitlines()):
@@ -183,7 +183,8 @@ def _result_evidence(root: Path, command: str, output: str, error: str) -> tuple
     observed = set()
     if commands.intersection({"cat", "grep", "head", "tail", "awk", "cut", "sort"}):
         file_groups = []
-        for part in _pipeline_parts(tokens):
+        file_commands = []
+        for part in parts:
             files = []
             for token in part[1:]:
                 if token.startswith("-"):
@@ -196,16 +197,43 @@ def _result_evidence(root: Path, command: str, output: str, error: str) -> tuple
                     files.append(path)
             if files:
                 file_groups.append(files)
+                file_commands.append(part[0])
         # A command with its own files ignores the upstream pipe. Attribute
         # the final output only to files opened by the last such command.
-        for path in (file_groups[-1] if file_groups else []):
+        result_paths = file_groups[-1] if file_groups else []
+        if result_paths and file_commands[-1] == "grep" and len(result_paths) > 1:
+            # Multi-file grep prefixes each returned line with its source.
+            # Credit only files visibly represented in the result, not every
+            # file that grep scanned while filtering.
+            returned_paths = []
+            output_lines = output.splitlines()
+            for path in result_paths:
+                relative = path.relative_to(root.resolve()).as_posix()
+                prefixes = {relative, f"./{relative}", str(path)}
+                if any(
+                    line.startswith(prefix + ":")
+                    for line in output_lines
+                    for prefix in prefixes
+                ):
+                    returned_paths.append(path)
+            result_paths = returned_paths
+        for path in result_paths:
             relative = path.relative_to(root.resolve()).as_posix()
             for markers, _ in PROGRESS_STEPS:
                 observed.update(marker for marker in markers if relative.startswith((marker + "/", marker + ".", "dossiers/" + marker + "/")))
             observed.update(marker for marker in FILE_DIALOGUES if relative.startswith(("dossiers/" + marker + "/", "evidence/" + marker + ".", "evidence/" + marker + "/")))
             if relative == "evidence/team/interviews.txt":
+                # grep prefixes matching lines with their source path when it
+                # receives multiple files (path:content). Strip that prefix
+                # before recognizing interview records.
+                interview_lines = output.splitlines()
+                prefix = relative + ":"
+                interview_lines = [
+                    line[len(prefix):] if line.startswith(prefix) else line
+                    for line in interview_lines
+                ]
                 for person in ("Kevin", "Anthony", "Lisa", "Lydie", "Mickael"):
-                    if any(line.startswith(f"{person}|") for line in output.splitlines()):
+                    if any(line.startswith(f"{person}|") for line in interview_lines):
                         observed.add(f"team-interview:{person}")
             discovered.add(relative)
     return observed, discovered, commands
@@ -282,11 +310,10 @@ def _record_stage_answer(
             _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=malformed_report_markers")
             return
     if correction and not has_answer:
-        dialogue = f"[Mickael] Aucune réponse enregistrée pour l'étape {stage}; il n'y a rien à corriger."
+        dialogue = f"[Mickael] L'étape {stage} est encore vide. Saisissez votre première note; rien ne sera remplacé."
         print(_paint(YELLOW, dialogue))
         _write_session_log(log_path, f"DIALOGUE {dialogue}")
-        _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=no_existing_answer")
-        return
+        _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=empty_ready_for_answer")
     if has_answer:
         dialogue = "[Mickael] Une réponse existe déjà pour cette étape."
         print(_paint(YELLOW, dialogue))
@@ -359,20 +386,20 @@ def _record_stage_answer(
         _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_CORRECTION stage={stage} status=updated")
         return
-    if correction:
-        return
     if marker not in content:
         dialogue = "[Mickael] Cette rubrique de rapport est introuvable. Aucune écriture effectuée."
         print(_paint(RED, dialogue))
         _write_session_log(log_path, f"DIALOGUE {dialogue}")
         _write_session_log(log_path, f"REPORT_NOTE stage={stage} status=missing_marker")
         return
-    dialogue = f"[Mickael] Étape {stage} validée. {REPORT_STAGES[stage - 1]}"
-    print(_paint(GREEN, dialogue))
-    _write_session_log(log_path, f"DIALOGUE {dialogue}")
-    _write_session_log(log_path, f"STAGE_VALIDATED stage={stage}")
+    if not correction:
+        dialogue = f"[Mickael] Étape {stage} validée. {REPORT_STAGES[stage - 1]}"
+        print(_paint(GREEN, dialogue))
+        _write_session_log(log_path, f"DIALOGUE {dialogue}")
+        _write_session_log(log_path, f"STAGE_VALIDATED stage={stage}")
     try:
-        answer = input(_paint(CYAN, "Votre note : ")).strip()
+        prompt = "Votre première note : " if correction else "Votre note : "
+        answer = input(_paint(CYAN, prompt)).strip()
     except EOFError:
         dialogue = "[Mickael] Aucune note saisie. L'étape reste validée, mais le rapport n'est pas complété."
         print(_paint(YELLOW, dialogue))
@@ -488,22 +515,15 @@ def _validate_read_command(root: Path, parts: list[str]) -> None:
 
 
 def _run(root: Path, command: str) -> tuple[str, str]:
-    tokens = shlex.split(command)
-    if not tokens:
-        raise ValueError("Commande interdite. Utilisez une commande de lecture Shell.")
-
-    pipelines: list[list[str]] = [[]]
-    for token in tokens:
-        if token == "|":
-            if not pipelines[-1]:
-                raise ValueError("Pipeline invalide. Chaque symbole | doit relier deux commandes.")
-            pipelines.append([])
-        elif token in {">", ">>", ";", "&&"}:
-            raise ValueError("Redirections et enchaînements interdits dans ce terminal.")
-        else:
-            pipelines[-1].append(token)
-    if not pipelines[-1]:
+    # Split control operators only outside quotes; shlex alone loses the
+    # distinction between a literal quoted pipe (e.g. cut -d '|') and a pipe.
+    raw_parts = _split_shell_operators(command)
+    tokens_by_part = [shlex.split(part) for part in raw_parts]
+    if not tokens_by_part or any(not parts for parts in tokens_by_part):
         raise ValueError("Pipeline invalide. Chaque symbole | doit relier deux commandes.")
+    if not any(tokens_by_part):
+        raise ValueError("Commande interdite. Utilisez une commande de lecture Shell.")
+    pipelines = tokens_by_part
 
     for parts in pipelines:
         _validate_read_command(root, parts)
@@ -531,6 +551,38 @@ def _run(root: Path, command: str) -> tuple[str, str]:
             stderr += process.stderr.read()
             process.stderr.close()
     return stdout, stderr
+
+
+def _split_shell_operators(command: str) -> list[str]:
+    """Split unquoted pipes and reject unquoted mutation/chaining operators."""
+    parts: list[str] = []
+    start = 0
+    quote: str | None = None
+    escaped = False
+    index = 0
+    while index < len(command):
+        char = command[index]
+        if escaped:
+            escaped = False
+        elif char == "\\" and quote != "'":
+            escaped = True
+        elif quote:
+            if char == quote:
+                quote = None
+        elif char in {"'", '"'}:
+            quote = char
+        elif command.startswith("||", index):
+            raise ValueError("Opérateurs ||, &&, &, redirections et enchaînements sont interdits.")
+        elif char == "|":
+            parts.append(command[start:index].strip())
+            start = index + 1
+        elif char in {">", ";", "&"}:
+            raise ValueError("Opérateurs &&, &, redirections et enchaînements sont interdits.")
+        index += 1
+    if quote:
+        raise ValueError("Guillemets non terminés dans la commande.")
+    parts.append(command[start:].strip())
+    return parts
 
 
 def _custom(root: Path, line: str) -> bool:
@@ -570,6 +622,13 @@ def run_shell_console(root: Path) -> int:
     log_dir = root / ".student-data"
     log_dir.mkdir(exist_ok=True)
     log_path = log_dir / "session-current.log"
+    validated_stages = {
+        int(match.group(1))
+        for match in re.finditer(
+            r"(?m)^\[[^\]]+\] STAGE_VALIDATED stage=([1-6])$",
+            log_path.read_text(encoding="utf-8") if log_path.exists() else "",
+        )
+    }
     _write_session_log(log_path, "SESSION_START")
     print(_paint(YELLOW, f"Journal local de session : {log_path.relative_to(root)}"))
     print(_line())
@@ -597,7 +656,19 @@ def run_shell_console(root: Path) -> int:
             ):
                 print(_paint(YELLOW, "Utilisation : .correct <étape de 1 à 6>"))
             else:
-                _record_stage_answer(root, int(parts[1]), log_path, correction=True)
+                stage = int(parts[1])
+                if stage not in validated_stages:
+                    _narrate(
+                        log_path,
+                        f"L'étape {stage} n'a pas encore été validée par les preuves consultées. "
+                        "Poursuivez l'enquête avant d'y ajouter une note.",
+                    )
+                    _write_session_log(
+                        log_path,
+                        f"REPORT_CORRECTION stage={stage} status=stage_not_validated",
+                    )
+                else:
+                    _record_stage_answer(root, stage, log_path, correction=True)
             continue
         if line.startswith("."):
             custom_output = io.StringIO()
@@ -620,6 +691,7 @@ def run_shell_console(root: Path) -> int:
                     progress_step, progress = _progress_reaction(observed, commands, progress_step, consulted, used_commands)
                     if progress:
                         _narrate(log_path, progress, GREEN)
+                        validated_stages.add(progress_step)
                         _record_stage_answer(root, progress_step, log_path)
                         used_commands.clear()
             except (OSError, ValueError) as error:
@@ -649,6 +721,7 @@ def run_shell_console(root: Path) -> int:
             )
             if progress:
                 _narrate(log_path, progress, GREEN)
+                validated_stages.add(progress_step)
                 _record_stage_answer(root, progress_step, log_path)
                 used_commands.clear()
             elif observed:

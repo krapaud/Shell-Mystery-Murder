@@ -5,4 +5,4 @@
 2026-10-19 15:38 Lydie: je vérifierai le résultat depuis le poste-05; gardez le ticket ouvert si ça échoue.
 2026-10-19 15:46 Mickael: l'archive manque. Ne relancez rien; gardez l'état et les journaux tels quels.
 
-Note de reprise [1/3] : l'export donne un droit et une référence, pas encore la personne au clavier.
+Note de reprise [1/3] : RELEASE_DIR est une variable d'environnement qui désigne un chemin. Son export ne confère aucun droit d'accès; l'accès réellement utilisé et l'action doivent être établis par les journaux.

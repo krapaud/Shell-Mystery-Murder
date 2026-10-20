@@ -58,7 +58,7 @@ def main() -> int:
             Theme.GREEN,
         )
         print(f"\n{Theme.BOLD}Quand votre preuve est complète, utilisez :{Theme.RESET}")
-        print("python3 main.py --answer 'PROPRIETAIRE|ACTEUR'")
+        print("python3 main.py --answer 'PROPRIETAIRE|PERSONNE_PROBABLE'")
         return run_shell_console(ROOT)
     if arguments[0] != "--answer":
         print("Utilisez uniquement l'option --answer pour envoyer votre preuve.")
@@ -74,7 +74,13 @@ def main() -> int:
         for issue in report_issues:
             print(f"- {issue}")
         return 1
-    return validate(arguments[1])
+    result = validate(arguments[1])
+    if result == 0:
+        print(
+            "Les traces étayent cette attribution; elles identifient une session et un compte, "
+            "mais ne constituent pas une identification visuelle de la personne."
+        )
+    return result
 
 
 if __name__ == "__main__":
