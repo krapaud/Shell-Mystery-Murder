@@ -127,20 +127,28 @@ Quittez la console avec :
 rubrique correspondante de `investigation-report.md`. Une réponse déjà saisie
 n'est jamais remplacée sans vous demander confirmation. Pour revenir sur une
 note, utilisez `.correct 1` à `.correct 6` dans la console. Mickael vous
-avertira avant la modification. Après les six étapes,
-quittez la console et rédigez la conclusion dans le rapport. La validation
-finale exige les six étapes complétées. Vous pouvez garder des notes
-complémentaires à part. Le rapport doit contenir :
+avertira avant la modification. Après les six étapes, quittez la console et
+complétez les rubriques de synthèse du rapport. La validation finale vérifie
+qu'elles sont renseignées ; elle contrôle la structure, pas la qualité de votre
+raisonnement. Vous pouvez garder des notes complémentaires à part. Le rapport
+doit contenir :
 
-- une chronologie argumentée ;
-- l'action qui explique la disparition ;
-- la session et le terminal concernés ;
-- la credential utilisée et son propriétaire ;
-- l'acteur identifié ;
-- au moins trois familles de preuves indépendantes ;
-- les fausses pistes écartées et la raison de leur exclusion ;
-- la différence entre propriétaire du droit, utilisateur de la session et
-  personne qui a réalisé l'action.
+- au moins trois événements datés, avec fait, source et niveau de certitude ;
+- au moins deux observations sur les accès et les personnes, avec leurs
+  sources ;
+- une fausse piste écartée, la raison de son exclusion et sa source ;
+- trois familles de preuves distinctes, leurs sources et ce qu'elles
+  établissent ;
+- dans « Analyse de l'incident », l'action, la session, le terminal, la
+  credential et son propriétaire, l'acteur au terminal, ainsi que le lien entre
+  ces rôles ;
+- dans « Conclusion », un responsable, un niveau de certitude et une
+  justification argumentée.
+
+Le validateur refuse les rubriques vides, les lignes modèles inchangées et les
+réponses trop courtes. Les rubriques du modèle restent fixes, mais le texte de
+vos réponses est libre : aucune phrase attendue n'est comparée. Le validateur
+ne peut pas évaluer si votre interprétation des preuves est juste.
 
 Les trois notes numérotées retrouvées dans des archives différentes forment
 une même pensée. Rassemblez-les dans l'ordre, puis décidez quelles traces

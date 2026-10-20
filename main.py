@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 from game.investigation_shell import run_shell_console
+from game.report_validation import validate_report
 from game.validate_answer import validate
 
 ROOT = Path(__file__).parent
@@ -67,8 +68,11 @@ def main() -> int:
         return 1
     report = ROOT / "investigation-report.md"
     content = report.read_text(encoding="utf-8") if report.exists() else ""
-    if not all(f"<!-- NORTHSTAR_STAGE_{stage}_COMPLETED -->" in content for stage in range(1, 7)):
-        print("Le rapport comporte encore des étapes incomplètes. Terminez l'enquête avant de conclure.")
+    report_issues = validate_report(content)
+    if report_issues:
+        print("Le rapport d'enquête est incomplet :")
+        for issue in report_issues:
+            print(f"- {issue}")
         return 1
     return validate(arguments[1])
 
