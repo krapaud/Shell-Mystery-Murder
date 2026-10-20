@@ -19,12 +19,15 @@ répondre à ces questions :
 2. Quelle session et quel terminal sont liés à cette action ?
 3. Quelle credential a été utilisée ?
 4. Qui en est le propriétaire ?
-5. Qui était l'acteur devant le terminal ?
+5. Quelle personne est la plus probablement associée à l'action devant le
+   terminal ?
 6. Quelles pistes peuvent être écartées, et pourquoi ?
 
 Les traces concernent Kevin, Anthony, Mickael, Lisa et Lydie. Certaines actions
-sont légitimes. Une personne peut être propriétaire d'un accès sans être celle
-qui l'utilise.
+sont légitimes. Une personne peut être propriétaire d'une credential sans
+être celle qui l'utilise. Distinguez également ce que les traces établissent
+techniquement, comme une session ou un terminal, de l'identité humaine que
+vous en déduisez.
 
 Durée recommandée : 45 à 60 minutes. Le travail en équipe est recommandé,
 mais l'enquête est réalisable seul.
@@ -32,7 +35,10 @@ mais l'enquête est réalisable seul.
 ## Règles de l'enquête
 
 - Travaillez uniquement depuis la racine du projet.
-- Ne modifiez, ne supprimez et ne créez aucun fichier du jeu.
+- N'utilisez les commandes Shell que pour lire les fichiers du jeu. La console
+  écrit elle-même vos notes dans `investigation-report.md` et conserve un
+  journal de session ; ces écritures contrôlées font partie du fonctionnement
+  normal de l'enquête.
 - Vérifiez chaque hypothèse avec plusieurs traces indépendantes.
 - Notez les heures, les identifiants, les terminaux et les cibles exactes.
 - Ne concluez pas à partir d'un seul nom ou d'une seule ligne de log.
@@ -72,8 +78,9 @@ find evidence -type f -print | sort
 ```
 
 Les écritures, suppressions, redirections et chemins en dehors du projet sont
-refusés. Les fichiers sont le terrain de l'enquête : observez-les sans les
-altérer.
+refusés dans les commandes Shell saisies. Les fichiers de preuve sont le
+terrain de l'enquête : observez-les sans les altérer. La console reste seule
+responsable de l'ajout de vos notes au rapport et de son journal de session.
 
 ## Méthode de recherche
 
@@ -94,7 +101,9 @@ Dans `evidence/identity/`, recherchez les correspondances entre les membres,
 les credentials, les sessions et les terminaux.
 
 Notez les identifiants exacts et distinguez toujours le propriétaire d'une
-credential de la personne qui ouvre une session.
+credential, la session technique, le terminal concerné et la personne que les
+indices permettent d'associer à l'action. Cette dernière attribution est une
+inférence : exprimez son niveau de certitude dans le rapport.
 
 ### 3. Construire la chronologie
 
@@ -140,8 +149,9 @@ doit contenir :
 - trois familles de preuves distinctes, leurs sources et ce qu'elles
   établissent ;
 - dans « Analyse de l'incident », l'action, la session, le terminal, la
-  credential et son propriétaire, l'acteur au terminal, ainsi que le lien entre
-  ces rôles ;
+  credential et son propriétaire, la personne la plus probablement associée à
+  l'action, ainsi que le lien entre ces rôles et les limites de cette
+  attribution ;
 - dans « Conclusion », un responsable, un niveau de certitude et une
   justification argumentée.
 
@@ -162,7 +172,7 @@ Quand votre rapport est terminé, envoyez votre conclusion dans le format
 suivant :
 
 ```bash
-python3 main.py --answer 'PROPRIETAIRE|ACTEUR'
+python3 main.py --answer 'PROPRIETAIRE|PERSONNE_PROBABLE'
 ```
 
 Remplacez les deux valeurs par votre conclusion, dans cet ordre. Le programme

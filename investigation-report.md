@@ -57,7 +57,7 @@ Session et terminal concernés :
 
 Credential utilisée et son propriétaire :
 
-Acteur au terminal :
+Personne probablement associée à l'action :
 
 Lien entre propriétaire, utilisateur et acteur :
 
